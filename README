@@ -1,0 +1,6 @@
+This program calculates the number of secondary structures, Boltzman probabilities and partition function of an RNA sequence with respect to the hairpin number K. No dangles. Allow lonely base pairs.
+INSTALLATION NOTES
+1. type "make"
+2. type "make clean"
+3. (optional) type "make install", this step will copy the executable "RNAhairpin" into /usr/local/bin, and the man file into /usr/local/man/man1/. If you don't have permission, or your directory system is different from specified above, please do this step manually
+4. the executable is "RNAhairpin"

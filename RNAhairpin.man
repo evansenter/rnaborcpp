@@ -1,0 +1,27 @@
+.\" .ER
+.TH "RNAhairpin" "1" "June 4 2010"
+.SH "NAME"
+RNAhairpin \- calculate partition function of an RNA sequence with respect to the hairpin number K.
+.SH "SYNOPSIS"
+\fBRNAhairpin \-s \fISEQUENCE\fP [\-n \fINUM\fP]
+.SH "DESCRIPTION"
+.I RNAhairpin
+calculates the number of secondary structures, Boltzman probabilities and partition function of an RNA sequence with respect to the hairpin number K.
+.SH "OPTIONS"
+No dangles. Allow lonely base pairs.
+.IP \fB\-s\fB
+\fISEQUENCE\fP is the input RNA sequence.
+.IP \fB\-n\fB
+\fINUM\fP is the maximum number of hairpin that one considers.
+If not specified, the program will calculate the maximum possible number of hairpins given the current RNA sequence, and use that number as an upper bound.
+.SH "REFERENCES"
+If you use this program in your work you might want to cite:
+.PP
+Yang Ding, W. Andy Lorenz, Peter Clote(2010) Parametric Partition Function of RNA, In preparation.
+.SH "VERSION"
+This man page documents version 1.0 of RNAhairpin program.
+.SH "AUTHOR"
+Yang Ding, W. Andy Lorenz, Peter Clote.
+.SH "BUGS"
+If you find any bugs, please send the report to clote@bc.edu. Any comments for improvement are welcome too.
+.br
