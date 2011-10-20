@@ -37,10 +37,10 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
       j = i + d;
 	    
 	    if (BP(i, j, sequence)) {
-	      McGetZB(i, j, sequence, ZB, ZM);
+	      solveZB(i, j, sequence, ZB, ZM);
 	    }
 	    
-	    McGetZM(i, j, sequence, ZB, ZM);
+	    solveZM(i, j, sequence, ZB, ZM);
 	  }
   }
   
@@ -48,14 +48,14 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
     for (i = 1; i <= seqlen - d; ++i) {
 	    j = i + d;
 	    
-	    McGetZ(i, j, sequence, Z, ZB);
+	    solveZ(i, j, sequence, Z, ZB);
 	  }
   }
   
   return Z;
 }
 
-int McGetZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) { 
+int solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
@@ -80,7 +80,7 @@ int McGetZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) {
   }
 }
 
-int McGetZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -109,7 +109,7 @@ int McGetZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   }
 }
 
-int McGetZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+int solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
   int k;
   
   for (k = i; k < j - MIN_PAIR_DIST; ++k) {
