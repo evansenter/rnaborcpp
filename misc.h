@@ -2,6 +2,7 @@ int ElementInList(char subshape[SHAPELENGTH],char shapeList[SHAPELENGTH][SHAPELE
 int NumInList(int a, int L[SHAPELENGTH],int listlen);
 double MaxInArray(double array[],int arraylen);
 int BP(int i,int j,char sequence[MAXSIZE]);
+int pairedIn(int i, int j, int k, char structure[MAXSIZE]);
 double ***Allocate3DMatrix(int a, int b, int c);
 double **Allocate2DMatrix(int a, int b);
 int CheckSequence(char sequence[MAXSIZE]);

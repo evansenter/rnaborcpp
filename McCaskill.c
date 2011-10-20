@@ -16,46 +16,55 @@
 #define MAX_INTERIOR_DIST 30
 
 double** runMcCaskill(char sequence[MAXSIZE]) {
-  int i, j, d;
+  int xs, i, j, d;
   double **Z;
   double **ZB;
   double **ZM;
-  Z  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  double **complexRoots;
   
-  for (i = 0; i < seqlen + 1; ++i) {
-    for (j = 0; j < seqlen + 1; ++j) {
-  	  Z[i][j]  = 0;
-  	  ZB[i][j] = 0;
-  	  ZM[i][j] = 0;
-	  }
+  Z            = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  ZB           = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  ZM           = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  complexRoots = Allocate2DMatrix(seqlen + 1, 3);
+  
+  for (xs = 0; xs < seqlen + 1; ++xs) {
+    complexRoots[xs][0] = cos(2 * M_PI * xs / (seqlen + 1));
+    complexRoots[xs][1] = sin(2 * M_PI * xs / (seqlen + 1));
+    complexRoots[xs][2] = 0;
+    
+    for (i = 0; i < seqlen + 1; ++i) {
+      for (j = 0; j < seqlen + 1; ++j) {
+    	  Z[i][j]  = 0;
+    	  ZB[i][j] = 0;
+    	  ZM[i][j] = 0;
+  	  }
+    }
+
+    for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
+      for (i = 1; i <= seqlen - d; ++i) {
+        j = i + d;
+
+  	    if (BP(i, j, sequence)) {
+  	      solveZB(i, j, sequence, ZB, ZM, complexRoots[xs]);
+  	    }
+
+  	    solveZM(i, j, sequence, ZB, ZM, complexRoots[xs]);
+  	  }
+    }
+
+    for (d = 0; d < seqlen; ++d) {
+      for (i = 1; i <= seqlen - d; ++i) {
+  	    j = i + d;
+
+  	    solveZ(i, j, sequence, Z, ZB, complexRoots[xs]);
+  	  }
+    }
   }
   
-  for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
-    for (i = 1; i <= seqlen - d; ++i) {
-      j = i + d;
-	    
-	    if (BP(i, j, sequence)) {
-	      solveZB(i, j, sequence, ZB, ZM);
-	    }
-	    
-	    solveZM(i, j, sequence, ZB, ZM);
-	  }
-  }
-  
-  for (d = 0; d < seqlen; ++d) {
-    for (i = 1; i <= seqlen - d; ++i) {
-	    j = i + d;
-	    
-	    solveZ(i, j, sequence, Z, ZB);
-	  }
-  }
-  
-  return Z;
+  return complexRoots;
 }
 
-int solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) { 
+int solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB, double *complex_x) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
@@ -80,7 +89,7 @@ int solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) {
   }
 }
 
-int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM, double *complex_x) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -106,7 +115,7 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   }
 }
 
-int solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+int solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM, double *complex_x) { 
   int k;
   
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT);

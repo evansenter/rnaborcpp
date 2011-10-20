@@ -1,16 +1,16 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<math.h>
-#include"myConst.h"
-#include"fold.h"
-#include"energy_const.h"
-#include"fold_vars.h"
-#include"pair_mat.h"
-#include"convert_Vienna.h"
-#include"params.h"
-#include"misc.h"
-#include<limits.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include "myConst.h"
+#include "fold.h"
+#include "energy_const.h"
+#include "fold_vars.h"
+#include "pair_mat.h"
+#include "convert_Vienna.h"
+#include "params.h"
+#include "misc.h"
+#include <limits.h>
 
 /*The following function checks if the ith and jth positions in the sequence could base pair*/
 int BP(int i,int j,char sequence[MAXSIZE])  //safe
@@ -24,6 +24,30 @@ int BP(int i,int j,char sequence[MAXSIZE])  //safe
     return 1;
   else
     return 0;
+}
+
+int pairedIn(int i, int j, int k, char structure[MAXSIZE]) {
+  if (j - i < 4) {
+    return 0;
+  } else {
+    int structurePointer, stackPointer;
+    int stack[j - i + 1];
+    int pairs[j - i + 1];
+    
+    stackPointer = 0;
+    
+    for (structurePointer = i; structurePointer <= j; ++structurePointer) {
+      pairs[i - structurePointer] = -1;
+      
+      if (structure[structurePointer] == "(") {
+        stack[stackPointer++] = structurePointer;
+      } else if (structure[structurePointer] == ")" && stackPointer > 0) {
+        pairs[i - structurePointer] = stack[--stackPointer];
+      }
+    }
+    
+    return structure[k - i] != -1;
+  }
 }
 
 int ElementInList(char subshape[SHAPELENGTH],char shapeList[SHAPELENGTH][SHAPELENGTH],int listlen) //check if a subshape is in list, if yes,return the index of the subshape,if not return -1
