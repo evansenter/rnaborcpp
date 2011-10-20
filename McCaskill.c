@@ -17,10 +17,10 @@
 
 double** runMcCaskill(char sequence[MAXSIZE]) {
   int xs, i, j, d;
+  double xi, yi;
   double **Z;
   double **ZB;
   double **ZM;
-  double **regularRoots;
   char structure[seqlen + 1];
   
   Z            = Allocate2DMatrix(seqlen + 1, seqlen + 1);
@@ -39,7 +39,7 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
     // complexRoots[xs][1] = sin(2 * M_PI * xs / (seqlen + 1));
     // complexRoots[xs][2] = 0;
     
-    regularRoots[xs][0] = 1 / (xs + 1);
+    xi = 1 / (xs + 1);
     
     for (i = 0; i < seqlen + 1; ++i) {
       for (j = 0; j < seqlen + 1; ++j) {
@@ -54,10 +54,10 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
         j = i + d;
 
   	    if (BP(i, j, sequence)) {
-  	      solveZB(i, j, sequence, structure, ZB, ZM, regularRoots[xs]);
+  	      solveZB(i, j, sequence, structure, ZB, ZM, xi);
   	    }
 
-  	    solveZM(i, j, sequence, structure, ZB, ZM, regularRoots[xs]);
+  	    solveZM(i, j, sequence, structure, ZB, ZM, xi);
   	  }
     }
 
@@ -65,36 +65,36 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
       for (i = 1; i <= seqlen - d; ++i) {
   	    j = i + d;
 
-  	    solveZ(i, j, sequence, structure, Z, ZB, regularRoots[xs]);
+  	    solveZ(i, j, sequence, structure, Z, ZB, xi);
   	  }
     }
     
-    regularRoots[xs][1] = Z[1][seqlen];
+    yi = Z[1][seqlen];
     
-    printf("%f, %f\n", regularRoots[xs][0], regularRoots[xs][1]);
+    printf("%f, %f\n", xi, yi);
   }
   
-  return regularRoots;
+  return Z;
 }
 
-int solveZ(int i, int j, char sequence[MAXSIZE], char *structure, double **Z, double **ZB, double *complex_x) { 
+void solveZ(int i, int j, char *sequence, char *structure, double **Z, double **ZB, double xi) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
     Z[i][j] = 1;
     Z[j][i] = 1;
   } else {
-    Z[i][j] += Z[i][j - 1] * pow(complex_x[0], pairedIn(i, j, j, structure) ? 1 : 0);
+    Z[i][j] += Z[i][j - 1] * pow(xi, pairedIn(i, j, j, structure) ? 1 : 0);
     Z[j][i] += Z[j - 1][i];
     
     for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
       // (k, j) is the rightmost base pair in (i, j).
 	    if (BP(k, j, sequence)) {
 	      if (k == i) {
-		      Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(complex_x[0], bpDifference(i, j, structure, 0, 0, 0, 0, k, j));
+		      Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, 0, 0, k, j));
 		      Z[j][i] += ZB[j][k];
 		    } else {
-		      Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(complex_x[0], bpDifference(i, j, structure, 0, 0, i, k - 1, k, j));
+		      Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, i, k - 1, k, j));
 		      Z[j][i] += Z[k - 1][i] * ZB[j][k];
 		    }
 	    }
@@ -102,12 +102,12 @@ int solveZ(int i, int j, char sequence[MAXSIZE], char *structure, double **Z, do
   }
 }
 
-int solveZB(int i, int j, char sequence[MAXSIZE], char *structure, double **ZB, double **ZM, double *complex_x) { 
+void solveZB(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
   // In a hairpin, (i + 1, j - 1) all unpaired.
-  ZB[i][j] += exp(-HP_Energy(i, j, S0, sequence + 1) / kT) * pow(complex_x[0], bpDifference(i, j, structure, i, j, 0, 0, 0, 0));
+  ZB[i][j] += exp(-HP_Energy(i, j, S0, sequence + 1) / kT) * pow(xi, bpDifference(i, j, structure, i, j, 0, 0, 0, 0));
   ZB[j][i] += 1;
   
   // Interior loop / bulge / stack / multiloop.
@@ -116,33 +116,33 @@ int solveZB(int i, int j, char sequence[MAXSIZE], char *structure, double **ZB, 
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
         // are all unpaired.
-	      ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT) * pow(complex_x[0], bpDifference(i, j, structure, i, j, k, l, 0, 0));
+	      ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT) * pow(xi, bpDifference(i, j, structure, i, j, k, l, 0, 0));
 	      ZB[j][i] += ZB[l][k];
 	      
 	      // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
         // there is at least one hairpin between (i + 1, k - 1).
-        ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1] * pow(complex_x[0], bpDifference(i, j, structure, i, j, i + 1, k - 1, k, l));
+        ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1] * pow(xi, bpDifference(i, j, structure, i, j, i + 1, k - 1, k, l));
         ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
 	    }
 	  }
   }
 }
 
-int solveZM(int i, int j, char sequence[MAXSIZE], char *structure, double **ZB, double **ZM, double *complex_x) { 
+void solveZM(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
   int k;
   
-  ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(complex_x[0], pairedIn(i, j, j, structure) ? 1 : 0);
+  ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(xi, pairedIn(i, j, j, structure) ? 1 : 0);
   ZM[j][i] += ZM[j - 1][i];
   
   for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) {
     if (BP(k, j, sequence)) {
       // Only one stem.
-      ZM[i][j] += ZB[k][j] * exp(-ML_base * (k - i) / kT) * pow(complex_x[0], bpDifference(i, j, structure, 0, 0, k, j, 0, 0));
+      ZM[i][j] += ZB[k][j] * exp(-ML_base * (k - i) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, k, j, 0, 0));
       ZM[j][i] += ZB[j][k];
       
       // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
       if (k > i) {
-        ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * exp(-ML_base / kT) * pow(complex_x[0], bpDifference(i, j, structure, 0, 0, i, k - 1, k, j));
+        ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * exp(-ML_base / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, i, k - 1, k, j));
         ZM[j][i] += ZB[j][k] * ZM[k - 1][i];
       }
     }
