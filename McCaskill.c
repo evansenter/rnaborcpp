@@ -27,7 +27,6 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
   for (i = 0; i < seqlen + 1; ++i) {
     for (j = 0; j < seqlen + 1; ++j) {
   	  Z[i][j]  = 0;
-  	  Z[j][i]  = 0;
   	  ZB[i][j] = 0;
   	  ZM[i][j] = 0;
 	  }
@@ -87,7 +86,7 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   
   // In a hairpin, (i + 1, j - 1) all unpaired.
   ZB[i][j] += exp(-HP_Energy(i, j, S0, sequence + 1) / kT);
-  ZB[j][i] += 1.0;
+  ZB[j][i] += 1;
   
   // Interior loop / bulge / stack / multiloop.
   for (k = i + 1; k < j - MIN_PAIR_DIST; ++k) {
@@ -99,12 +98,9 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
 	      ZB[j][i] += ZB[l][k];
 	      
 	      // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
-        // there is at least one hairpin between (i + 1, k - 1) in order to be a multiloop, so
-        // k needs to be more than (MIN_PAIR_DIST + 2) from i to have room for the branch.
-        // if (k > i) {
-          ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1];
-          ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
-        // }
+        // there is at least one hairpin between (i + 1, k - 1).
+        ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1];
+        ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
 	    }
 	  }
   }
@@ -112,6 +108,9 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
 
 int solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
   int k;
+  
+  ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT);
+  ZM[j][i] += ZM[j - 1][i];
   
   for (k = i; k < j - MIN_PAIR_DIST; ++k) {
     if (BP(k, j, sequence)) {
