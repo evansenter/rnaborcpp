@@ -38,7 +38,7 @@ double** runMcCaskill(char *sequence) {
     // complexRoots[xs][1] = sin(2 * M_PI * xs / (seqlen + 1));
     // complexRoots[xs][2] = 0;
     
-    xi = 1 / (xs + 1);
+    xi = 1 / ((double) xs + 1);
     
     for (i = 0; i < seqlen + 1; ++i) {
       for (j = 0; j < seqlen + 1; ++j) {
@@ -70,7 +70,7 @@ double** runMcCaskill(char *sequence) {
     
     yi = Z[1][seqlen];
     
-    printf("%f, %f\n", xi, yi);
+    printf("[%f, %f]\n", xi, yi);
   }
   
   return Z;
