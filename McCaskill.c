@@ -91,7 +91,7 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   
   // Interior loop / bulge / stack / multiloop.
   for (k = i + 1; k < j - MIN_PAIR_DIST; ++k) {
-    for (l = max(k + MIN_PAIR_DIST + 1, j - MAX_INTERIOR_DIST - 1; l < j; ++l) {
+    for (l = max(k + MIN_PAIR_DIST + 1, j - MAX_INTERIOR_DIST - 1); l < j; ++l) {
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
         // are all unpaired.
