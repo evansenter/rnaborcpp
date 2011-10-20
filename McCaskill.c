@@ -23,10 +23,9 @@ double** runMcCaskill(char *sequence) {
   double **ZM;
   char structure[seqlen + 1];
   
-  Z            = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZB           = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZM           = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  regularRoots = Allocate2DMatrix(seqlen + 1, 2);
+  Z  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   
   // For now the default structure is the unpaired structure, this can easily be changed later on.
   for (i = 0; i <= seqlen; ++i) {
@@ -77,7 +76,7 @@ double** runMcCaskill(char *sequence) {
   return Z;
 }
 
-void solveZ(int i, int j, char *sequence, char *structure, double **Z, double **ZB, double xi) { 
+int solveZ(int i, int j, char *sequence, char *structure, double **Z, double **ZB, double xi) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
@@ -102,7 +101,7 @@ void solveZ(int i, int j, char *sequence, char *structure, double **Z, double **
   }
 }
 
-void solveZB(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
+int solveZB(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -128,7 +127,7 @@ void solveZB(int i, int j, char *sequence, char *structure, double **ZB, double 
   }
 }
 
-void solveZM(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
+int solveZM(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
   int k;
   
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(xi, pairedIn(i, j, j, structure) ? 1 : 0);
