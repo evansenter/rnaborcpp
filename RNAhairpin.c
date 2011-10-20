@@ -83,12 +83,17 @@ int main(int argc, char *argv[]){
         HN[i]=0;}
     HairpinPartition(HP,HN,H_MAX,sequence);
     
-    char testString[5];
-    testString[0] = '.';
-    testString[1] = '.';
-    testString[2] = '.';
-    testString[3] = '.';
-    testString[4] = '.';
+    char testString[8];
+    testString[0] = ')';
+    testString[1] = ')';
+    testString[2] = ')';
+    testString[3] = ')';
+    testString[4] = ')';
+    testString[5] = ')';
+    testString[6] = ')';
+    testString[7] = ')';
+    
+    
     
     double** McCaskillZ;
     McCaskillZ=runMcCaskill(sequence);
