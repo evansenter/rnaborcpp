@@ -13,6 +13,7 @@
 #include "RNAhairpin.h"
 #include "misc.h"
 #define MIN_PAIR_DIST 3
+#define MAX_INTERIOR_DIST 30
 
 double** runMcCaskill(char sequence[MAXSIZE]) {
   int i, j, d;
@@ -37,7 +38,7 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
       j = i + d;
 	    
 	    if (BP(i, j, sequence)) {
-	      solveZB(i, j, sequence, Z, ZB, ZM);
+	      solveZB(i, j, sequence, ZB, ZM);
 	    }
 	    
 	    solveZM(i, j, sequence, ZB, ZM);
@@ -80,7 +81,7 @@ int solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) {
   }
 }
 
-int solveZB(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB, double **ZM) { 
+int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -89,8 +90,8 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB, doubl
   ZB[j][i] += 1.0;
   
   // Interior loop / bulge / stack / multiloop.
-  for (k = i + 1; k < min(i + 30, j - MIN_PAIR_DIST - 1) + 1; ++k) {
-    for (l = max(k + MIN_PAIR_DIST + 1, j - (30 - (k - i))); l < j; ++l) {
+  for (k = i + 1; k < j - MIN_PAIR_DIST; ++k) {
+    for (l = max(k + MIN_PAIR_DIST + 1, j - MAX_INTERIOR_DIST - 1; l < j; ++l) {
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
         // are all unpaired.
@@ -101,8 +102,8 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB, doubl
         // there is at least one hairpin between (i + 1, k - 1) in order to be a multiloop, so
         // k needs to be more than (MIN_PAIR_DIST + 2) from i to have room for the branch.
   	    if (k > i + MIN_PAIR_DIST + 2) {
-          ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * Z[k][l] * ZM[i + 1][k - 1];
-          ZB[j][i] += Z[l][k] * ZM[k - 1][i + 1];
+          ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1];
+          ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
   	    }
 	    }
 	  }
