@@ -40,14 +40,7 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
 	      solveZB(i, j, sequence, ZB, ZM);
 	    }
 	    
-	    solveZM(i, j, sequence, ZB, ZM);
-	  }
-  }
-  
-  for (d = 0; d < seqlen; ++d) {
-    for (i = 1; i <= seqlen - d; ++i) {
-	    j = i + d;
-	    
+	    solveZM(i, j, sequence, ZB, ZM);   
 	    solveZ(i, j, sequence, Z, ZB);
 	  }
   }
