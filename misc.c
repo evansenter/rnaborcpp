@@ -39,9 +39,9 @@ int pairedIn(int i, int j, int k, char structure[MAXSIZE]) {
     for (structurePointer = i; structurePointer <= j; ++structurePointer) {
       pairs[i - structurePointer] = -1;
       
-      if (structure[structurePointer] == "(") {
+      if (structure[structurePointer] == '(') {
         stack[stackPointer++] = structurePointer;
-      } else if (structure[structurePointer] == ")" && stackPointer > 0) {
+      } else if (structure[structurePointer] == ')' && stackPointer > 0) {
         pairs[i - structurePointer] = stack[--stackPointer];
       }
     }
