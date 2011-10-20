@@ -32,25 +32,25 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
 	  }
   }
   
-  // for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
-  //   for (i = 1; i <= seqlen - d; ++i) {
-  //     j = i + d;
-  //      
-  //      if (BP(i, j, sequence)) {
-  //        solveZB(i, j, sequence, ZB, ZM);
-  //      }
-  //      
-  //      solveZM(i, j, sequence, ZB, ZM);
-  //    }
-  // }
-  // 
-  // for (d = 0; d < seqlen; ++d) {
-  //   for (i = 1; i <= seqlen - d; ++i) {
-  //      j = i + d;
-  //      
-  //      solveZ(i, j, sequence, Z, ZB);
-  //    }
-  // }
+  for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
+    for (i = 1; i <= seqlen - d; ++i) {
+      j = i + d;
+	    
+	    if (BP(i, j, sequence)) {
+	      solveZB(i, j, sequence, ZB, ZM);
+	    }
+	    
+	    solveZM(i, j, sequence, ZB, ZM);
+	  }
+  }
+  
+  for (d = 0; d < seqlen; ++d) {
+    for (i = 1; i <= seqlen - d; ++i) {
+	    j = i + d;
+	    
+	    solveZ(i, j, sequence, Z, ZB);
+	  }
+  }
   
   return Z;
 }
