@@ -15,7 +15,7 @@
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 
-double** runMcCaskill(char sequence[MAXSIZE]) {
+double** runMcCaskill(char *sequence) {
   int xs, i, j, d;
   double xi, yi;
   double **Z;
