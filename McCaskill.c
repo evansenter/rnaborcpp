@@ -112,14 +112,14 @@ int solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT);
   ZM[j][i] += ZM[j - 1][i];
   
-  for (k = i; k < j - MIN_PAIR_DIST; ++k) {
+  for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) {
     if (BP(k, j, sequence)) {
       // Only one stem.
       ZM[i][j] += ZB[k][j] * exp(-ML_base * (k - i) / kT);
       ZM[j][i] += ZB[j][k];
       
       // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
-      if (k > i + MIN_PAIR_DIST + 2) {
+      if (k > i) {
         ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * exp(-ML_base / kT);
         ZM[j][i] += ZB[j][k] * ZM[k - 1][i];
       }
