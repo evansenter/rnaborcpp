@@ -10,4 +10,4 @@ int Free2DMatrix(double **Matrix,int a, int b);
 int pairedIn(int i, int j, int k, char *structure);
 void populatePairings(int i, int j, char *structure, int *pairs);
 int comparePairings(int i, int j, int *pairs, int *comparisonPairs);
-int bpDifference(int i, int j, int k, int l, char *structure, int bounds[][2], int numBounds);
+int bpDifference(int i, int j, char *structure, int l, int r, int i1, int j1, int i2, int j2);

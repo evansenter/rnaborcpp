@@ -205,7 +205,8 @@ int comparePairings(int i, int j, int *pairs, int *comparisonPairs) {
   return pairings;
 }
 
-int bpDifference(int i, int j, int k, int l, char *structure, int bounds[][2], int numBounds) {
+int bpDifference(int i, int j, char *structure, int l, int r, int i1, int j1, int i2, int j2) {
+  // Be careful of that situation when k = i - 1 and i = 1, putting k out of bounds...
   int counter;
   int pairs[j + 1];
   int comparisonPairs[j + 1];
@@ -217,12 +218,16 @@ int bpDifference(int i, int j, int k, int l, char *structure, int bounds[][2], i
   
   populatePairings(i, j, structure, pairs);
   
-  for (counter = 0; counter < numBounds; ++counter) {
-    populatePairings(bounds[counter][0], bounds[counter][1], structure, comparisonPairs);
+  if (i1 && j1 && j1 >= i1) {
+    populatePairings(i1, j1, structure, comparisonPairs);
   }
   
-  if (k && l) {
-    comparisonPairs[k] = l;
+  if (i2 && j2 && j2 >= i2) {
+    populatePairings(i2, j2, structure, comparisonPairs);
+  }
+  
+  if (l && r) {
+    comparisonPairs[l] = r;
   }
   
   return comparePairings(i, j, pairs, comparisonPairs);
