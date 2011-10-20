@@ -88,7 +88,7 @@ int main(int argc, char *argv[]){
     printf("The RNA sequence is %s:\n",sequence+1);
     
     for (i = 1; i <= seqlen; i++) {
-      for (j = 1; i <= seqlen; i++) {
+      for (j = 1; j <= seqlen; j++) {
         printf("%10.10f ", McCaskillZ[i][j]);
       }
       
