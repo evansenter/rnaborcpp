@@ -101,10 +101,10 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
 	      // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
         // there is at least one hairpin between (i + 1, k - 1) in order to be a multiloop, so
         // k needs to be more than (MIN_PAIR_DIST + 2) from i to have room for the branch.
-  	    if (k > i) {
+        // if (k > i) {
           ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1];
           ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
-  	    }
+        // }
 	    }
 	  }
   }
