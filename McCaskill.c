@@ -12,37 +12,35 @@
 #include <limits.h>
 #include "RNAhairpin.h"
 #include "misc.h"
+#define MIN_PAIR_DIST 3
 
 double** runMcCaskill(char sequence[MAXSIZE]) {
   int i, j, d;
-  double **McZ;
-  double **McZB;
-  double **McZM;
-  double **McZM1;
-  McZ   = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  McZB  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  McZM  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  McZM1 = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  double **Z;
+  double **ZB;
+  double **ZM;
+  Z  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   
   for (i = 0; i < seqlen + 1; ++i) {
     for (j = 0; j < seqlen + 1; ++j) {
-  	  McZB[i][j]  = 0;
-  	  McZ[i][j]   = 0;
-  	  McZM[i][j]  = 0;
-  	  McZM1[i][j] = 0;
+  	  Z[i][j]  = 0;
+  	  Z[j][i]  = 0;
+  	  ZB[i][j] = 0;
+  	  ZM[i][j] = 0;
 	  }
   }
   
-  for (d = 4; d < seqlen; ++d) {
+  for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
     for (i = 1; i <= seqlen - d; ++i) {
       j = i + d;
 	    
 	    if (BP(i, j, sequence)) {
-	      McGetZB(i, j, sequence, McZM1, McZM, McZB);
+	      McGetZB(i, j, sequence, ZB, ZM);
 	    }
 	    
-	    McGetZM1(i, j, sequence, McZM1, McZB);
-	    McGetZM(i, j, sequence, McZM1, McZM);
+	    McGetZM(i, j, sequence, ZB, ZM);
 	  }
   }
   
@@ -50,77 +48,81 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
     for (i = 1; i <= seqlen - d; ++i) {
 	    j = i + d;
 	    
-	    McGetZ(i, j, sequence, McZ, McZB);
+	    McGetZ(i, j, sequence, Z, ZB);
 	  }
   }
   
-  return McZ;
+  return Z;
 }
 
 int McGetZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) { 
-  int r;
+  int k;
   
-  if(j - i < 4) {
-    Z[i][j] = exp(0);
+  if(j - i < MIN_PAIR_DIST + 1) {
+    Z[i][j] = 1;
     Z[j][i] = 1;
   } else {
     Z[i][j] += Z[i][j - 1];
     Z[j][i] += Z[j - 1][i];
     
-    for (r = i; r < j - 3; ++r) { 
-	    if (BP(r, j, sequence)) {
-	      if (r == i) {
-		      Z[i][j] += ZB[r][j] * exp(-AU_Penalty(i, j, S0) / kT);
-		      Z[j][i] += ZB[j][r];
+    for (k = i; k < j - MIN_PAIR_DIST; ++k) { 
+      // (k, j) is the rightmost base pair in (i, j).
+	    if (BP(k, j, sequence)) {
+	      if (k == i) {
+		      Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT);
+		      Z[j][i] += ZB[j][k];
 		    } else {
-		      Z[i][j] += Z[i][r - 1] * ZB[r][j] * exp(-AU_Penalty(r, j, S0) / kT);
-		      Z[j][i] += Z[r - 1][i] * ZB[j][r];
+		      Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT);
+		      Z[j][i] += Z[k - 1][i] * ZB[j][k];
 		    }
 	    }
 	  }
   }
 }
 
-int McGetZB(int i, int j, char sequence[MAXSIZE], double **ZM1, double **ZM, double **ZB) { 
-  int l, r;
+int McGetZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+  // (i, j) assumed to b.p. in here.
+  int k, l;
   
+  // In a hairpin, (i + 1, j - 1) all unpaired.
   ZB[i][j] += exp(-HP_Energy(i, j, S0, sequence + 1) / kT);
   ZB[j][i] += 1.0;
   
-  for (l = i + 1; l < min(i + 30, j - 5) + 1; ++l) {
-    for (r = max(l + 4, j - (30 - (l - i))); r < j; ++r) {
-      if (BP(l, r, sequence)) {
-	      ZB[i][j] += ZB[l][r] * exp(-IL_Energy(i, j, l, r, S0) / kT);
-	      ZB[j][i] += ZB[r][l];
+  // Interior loop / bulge / stack / multiloop.
+  for (k = i + 1; k < min(i + 30, j - MIN_PAIR_DIST - 1) + 1; ++k) {
+    for (l = max(k + MIN_PAIR_DIST + 1, j - (30 - (k - i))); l < j; ++l) {
+      if (BP(k, l, sequence)) {
+        // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
+        // are all unpaired.
+	      ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT);
+	      ZB[j][i] += ZB[l][k];
+	      
+	      // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
+        // there is at least one hairpin between (i + 1, k - 1) in order to be a multiloop, so
+        // k needs to be more than (MIN_PAIR_DIST + 2) from i to have room for the branch.
+  	    if (k > i + MIN_PAIR_DIST + 2) {
+          ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1];
+          ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
+  	    }
 	    }
 	  }
   }
-  
-  for (r = i + 6; r < j - 4; ++r) {
-    ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZM[i + 1][r - 1] * ZM1[r][j - 1];
-    ZB[j][i] += ZM[r - 1][i + 1] * ZM1[j - 1][r];
-  }
 }
 
-int McGetZM(int i, int j, char sequence[MAXSIZE], double **ZM1, double **ZM) { 
-  int r;
+int McGetZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+  int k;
   
-  for (r = i; r < j - 3; ++r) {
-    ZM[i][j] += ZM1[r][j] * exp(-ML_base * (r - i) / kT);
-    ZM[j][i] += ZM1[j][r];
-  }
-     
-  for (r = i + 5; r < j - 3; ++r) {
-    ZM[i][j] += ZM[i][r-1] * ZM1[r][j];
-    ZM[j][i] += ZM[r-1][i] * ZM1[j][r];
-  }
-}
-
-int McGetZM1(int i, int j, char sequence[MAXSIZE], double **ZM1, double **ZB) { 
-  int r;
-  
-  for (r = i + 4; r < j + 1; ++r) {
-    ZM1[i][j] += ZB[i][r] * exp(-(ML_base * (j - r) + MLbasepairAndAUpenalty(i, r, S0)) / kT);
-    ZM1[j][i] += ZB[r][i];
+  for (k = i; k < j - MIN_PAIR_DIST; ++k) {
+    if (BP(k, j, sequence)) {
+      // Only one stem.
+      ZM[i][j] += ZB[k][j] * exp(-ML_base * (k - i) / kT);
+      ZM[j][i] += ZB[j][k];
+      
+      // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
+      if (k > i + MIN_PAIR_DIST + 2) {
+        ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * exp(-ML_base / kT);
+        ZM[j][i] += ZB[j][k] * ZM[k - 1][i];
+      }
+    }
   }
 }
