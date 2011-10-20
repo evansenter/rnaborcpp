@@ -86,6 +86,16 @@ int main(int argc, char *argv[]){
     McCaskillZ=runMcCaskill(sequence);
     totalpar=McCaskillZ[1][seqlen];
     printf("The RNA sequence is %s:\n",sequence+1);
+    
+    for (i = 1; i <= seqlen; i++) {
+      for (j = 1; i <= seqlen; i++) {
+        printf("%10.10f ", McCaskillZ[i][j]);
+      }
+      
+      printf("\n");
+    }
+    printf("\n");
+    
     printf("The first column is the number of hairpins in a secondary structure.\n");
     printf("The partition function and number of secondary structure with k-hairpin is:\n");
     printf("%-20s%-30s%-30s%-30s\n","K-hairpin","Number","Partition Function","Probability");
