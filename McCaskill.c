@@ -65,7 +65,7 @@ int solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) {
     Z[i][j] += Z[i][j - 1];
     Z[j][i] += Z[j - 1][i];
     
-    for (k = i; k < j - MIN_PAIR_DIST; ++k) { 
+    for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
       // (k, j) is the rightmost base pair in (i, j).
 	    if (BP(k, j, sequence)) {
 	      if (k == i) {
@@ -89,7 +89,7 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   ZB[j][i] += 1;
   
   // Interior loop / bulge / stack / multiloop.
-  for (k = i + 1; k < j - MIN_PAIR_DIST; ++k) {
+  for (k = i + 1; k <= j - MIN_PAIR_DIST - 1; ++k) {
     for (l = max(k + MIN_PAIR_DIST + 1, j - MAX_INTERIOR_DIST - 1); l < j; ++l) {
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
