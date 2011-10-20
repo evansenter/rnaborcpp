@@ -70,6 +70,8 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
     }
     
     regularRoots[xs][1] = Z[1][seqlen];
+    
+    printf("%f, %f\n", regularRoots[xs][0], regularRoots[xs][1]);
   }
   
   return regularRoots;

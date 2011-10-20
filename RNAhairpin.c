@@ -85,13 +85,6 @@ int main(int argc, char *argv[]){
     
     double** McCaskillZ;
     McCaskillZ=runMcCaskill(sequence);
-    
-    for (i = 0; i <= seqlen; i++) {
-      for (j = 0; j <= 1; j++) {
-        printf("%f, %f\n", McCaskillZ[i][j]);
-      }
-    }
-    
     totalpar=McCaskillZ[1][seqlen];
     printf("The RNA sequence is %s:\n",sequence+1);
     printf("The total number of structures is %.0f.\n", McCaskillZ[seqlen][1]);
