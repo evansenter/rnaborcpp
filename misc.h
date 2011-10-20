@@ -2,9 +2,12 @@ int ElementInList(char subshape[SHAPELENGTH],char shapeList[SHAPELENGTH][SHAPELE
 int NumInList(int a, int L[SHAPELENGTH],int listlen);
 double MaxInArray(double array[],int arraylen);
 int BP(int i,int j,char sequence[MAXSIZE]);
-int pairedIn(int i, int j, int k, char structure[MAXSIZE]);
 double ***Allocate3DMatrix(int a, int b, int c);
 double **Allocate2DMatrix(int a, int b);
 int CheckSequence(char sequence[MAXSIZE]);
 int Free3DMatrix(double ***Matrix, int a, int b, int c);
 int Free2DMatrix(double **Matrix,int a, int b);
+int pairedIn(int i, int j, int k, char *structure);
+void populatePairings(int i, int j, char *structure, int *pairs);
+int comparePairings(int i, int j, int *pairs, int *comparisonPairs);
+int bpDifference(int i, int j, int k, int l, char *structure, int bounds[][2], int numBounds);
