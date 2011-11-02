@@ -16,30 +16,30 @@
 #define MAX_INTERIOR_DIST 30
 
 double** runMcCaskill(char *sequence) {
-  int xs, i, j, d;
-  double xi, yi;
-  double **Z;
-  double **ZB;
-  double **ZM;
+  int x, i, j, d;
+  double **complexRoots;
+  double ***Z;
+  double ***ZB;
+  double ***ZM;
   char structure[seqlen + 1];
   
-  Z  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  complexRoots = Allocate2DMatrix(seqlen + 1, 4);
+  Z            = Allocate3DMatrix(seqlen + 1, seqlen + 1, 2);
+  ZB           = Allocate3DMatrix(seqlen + 1, seqlen + 1, 2);
+  ZM           = Allocate3DMatrix(seqlen + 1, seqlen + 1, 2);
   
   // For now the default structure is the unpaired structure, this can easily be changed later on.
   for (i = 0; i <= seqlen; ++i) {
     structure[i] = '.';
   }
   
-  for (xs = 0; xs < seqlen + 1; ++xs) {
-    // I don't have time to implement the scalar functions necessary to get this to work with roots of unity right now.
-    // complexRoots[xs][0] = cos(2 * M_PI * xs / (seqlen + 1));
-    // complexRoots[xs][1] = sin(2 * M_PI * xs / (seqlen + 1));
-    // complexRoots[xs][2] = 0;
+  for (x = 0; x < seqlen + 1; ++x) {
+    // Set this iteration's root of unity values.
+    complexRoots[x][0] = cos(2 * M_PI * x / (seqlen + 1));
+    complexRoots[x][1] = sin(2 * M_PI * x / (seqlen + 1));
+    complexRoots[x][2] = 0;
     
-    xi = 1 / ((double) xs + 1);
-    
+    // Reinitialize the 3 matricies.
     for (i = 0; i < seqlen + 1; ++i) {
       for (j = 0; j < seqlen + 1; ++j) {
     	  Z[i][j]  = 0;
@@ -48,35 +48,37 @@ double** runMcCaskill(char *sequence) {
   	  }
     }
 
+    // Populate ZB / ZM
     for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
       for (i = 1; i <= seqlen - d; ++i) {
         j = i + d;
 
   	    if (BP(i, j, sequence)) {
-  	      solveZB(i, j, sequence, structure, ZB, ZM, xi);
+  	      solveZB(i, j, x, sequence, structure, ZB, ZM, complexRoots);
   	    }
 
-  	    solveZM(i, j, sequence, structure, ZB, ZM, xi);
+  	    solveZM(i, j, x, sequence, structure, ZB, ZM, complexRoots);
   	  }
     }
 
+    // Populate Z
     for (d = 0; d < seqlen; ++d) {
       for (i = 1; i <= seqlen - d; ++i) {
   	    j = i + d;
 
-  	    solveZ(i, j, sequence, structure, Z, ZB, xi);
+  	    solveZ(i, j, x, sequence, structure, Z, ZB, complexRoots);
   	  }
     }
     
-    yi = Z[1][seqlen];
-    
-    printf("[%f, %f]\n", xi, yi);
+    // Save the complex solution for McCaskill's recursions evaluated at (complexRoots[x][0] + complexRoots[x][1] * i)
+    complexRoots[x][2] = Z[1][seqlen][0];
+    complexRoots[x][3] = Z[1][seqlen][1];
   }
   
-  return Z;
+  return complexRoots;
 }
 
-int solveZ(int i, int j, char *sequence, char *structure, double **Z, double **ZB, double xi) { 
+int solveZ(int i, int j, int x, char *sequence, char *structure, double ***Z, double ***ZB, double **complexRoots) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
@@ -101,7 +103,7 @@ int solveZ(int i, int j, char *sequence, char *structure, double **Z, double **Z
   }
 }
 
-int solveZB(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
+int solveZB(int i, int j, int x, char *sequence, char *structure, double ***ZB, double ***ZM, double **complexRoots) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -127,7 +129,7 @@ int solveZB(int i, int j, char *sequence, char *structure, double **ZB, double *
   }
 }
 
-int solveZM(int i, int j, char *sequence, char *structure, double **ZB, double **ZM, double xi) { 
+int solveZM(int i, int j, int x, char *sequence, char *structure, double ***ZB, double ***ZM, double **complexRoots) { 
   int k;
   
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(xi, pairedIn(i, j, j, structure) ? 1 : 0);
