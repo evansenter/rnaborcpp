@@ -149,3 +149,33 @@ int solveZM(int i, int j, int x, char *sequence, char *structure, double ***ZB, 
     }
   }
 }
+
+double* addComplex(double *complexA, double *complexB, double *complexSum) {
+  complexSum[0] = complexA[0] + complexB[0];
+  complexSum[1] = complexA[1] + complexB[1];
+  return complexSum;
+}
+
+double* scalarComplex(double *complex, double scalar, double *complexScalar) {
+  complexScalar[0] = complex[0] * scalar;
+  complexScalar[1] = complex[1] * scalar;
+  return complexScalar;
+}
+
+double* productComplex(double *complexA, double *complexB, double *complexProduct) {
+  complexProduct[0] = complexA[0] * complexB[0] - complexA[1] * complexB[1];
+  complexProduct[1] = complexA[0] * complexB[1] + complexA[1] * complexB[0];
+  return complexProduct;
+}
+
+double* powerComplex(double *complex, int power, double *complexPower) {
+  // This only works for integer powers of roots of unity, because we assume the radius of the complex number in polar form
+  // is 1, and pow(1, x) == 1
+  return rectangularRootComplex(arctan(complex[1] / complex[0]) * power, complexPower);
+}
+
+double* rectangularRootComplex(double angle, double *complexResult) {
+  complexResult[0] = cos(angle);
+  complexResult[1] = sin(angle);
+  return complexResult;
+}
