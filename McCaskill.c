@@ -14,6 +14,12 @@
 #include "misc.h"
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
+#define ZERO_OUT(matrix, i, j) \
+  matrix[i][j][0] = 0; \
+  matrix[i][j][1] = 0;
+#define ONE_OUT(matrix, i, j) \
+  matrix[i][j][0] = 1; \
+  matrix[i][j][1] = 1;
 
 double** runMcCaskill(char *sequence) {
   int x, i, j, d;
@@ -38,13 +44,14 @@ double** runMcCaskill(char *sequence) {
     complexRoots[x][0] = cos(2 * M_PI * x / (seqlen + 1));
     complexRoots[x][1] = sin(2 * M_PI * x / (seqlen + 1));
     complexRoots[x][2] = 0;
+    complexRoots[x][3] = 0;
     
     // Reinitialize the 3 matricies.
     for (i = 0; i < seqlen + 1; ++i) {
       for (j = 0; j < seqlen + 1; ++j) {
-    	  Z[i][j]  = 0;
-    	  ZB[i][j] = 0;
-    	  ZM[i][j] = 0;
+    	  ZERO_OUT(Z, i, j)
+    	  ZERO_OUT(ZB, i, j)
+    	  ZERO_OUT(ZM, i, j)
   	  }
     }
 
@@ -80,26 +87,54 @@ double** runMcCaskill(char *sequence) {
 
 int solveZ(int i, int j, int x, char *sequence, char *structure, double ***Z, double ***ZB, double **complexRoots) { 
   int k;
+  double complexHolderA[2];
+  double complexHolderB[2];
   
   if(j - i < MIN_PAIR_DIST + 1) {
-    Z[i][j] = 1;
-    Z[j][i] = 1;
+    ONE_OUT(Z, i, j)
+    ONE_OUT(Z, j, i)
   } else {
-    Z[i][j] += Z[i][j - 1] * pow(xi, pairedIn(i, j, j, structure) ? 1 : 0);
-    Z[j][i] += Z[j - 1][i];
+    // Z[i][j] += Z[i][j - 1] * pow(xi, pairedIn(i, j, j, structure) ? 1 : 0);
+    powerComplex(complexRoots[x], pairedIn(i, j, j, structure) ? 1 : 0, complexHolderA);
+    complexFromTo(complexHolderA, complexHolderB);
+    productComplex(Z[i][j - 1], complexHolderB, complexHolderA);
+    addComplex(Z[i][j], complexHolderA, Z[i][j]);
+    
+    // Z[j][i] += Z[j - 1][i];
+    addComplex(Z[j][i], Z[j - 1][i], Z[j][i]);
     
     for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
       // (k, j) is the rightmost base pair in (i, j).
 	    if (BP(k, j, sequence)) {
 	      if (k == i) {
-		      Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, 0, 0, k, j));
-		      Z[j][i] += ZB[j][k];
+          // Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, 0, 0, k, j));
+          ...
+		      
+          // Z[j][i] += ZB[j][k];
+          addComplex(Z[j][i], ZB[j][k], Z[j][i]);
 		    } else {
 		      Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, i, k - 1, k, j));
 		      Z[j][i] += Z[k - 1][i] * ZB[j][k];
 		    }
 	    }
 	  }
+    
+    
+    // Z[i][j] += Z[i][j - 1] * pow(xi, pairedIn(i, j, j, structure) ? 1 : 0);
+    // Z[j][i] += Z[j - 1][i];
+    //     
+    //     for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
+    //       // (k, j) is the rightmost base pair in (i, j).
+    //   if (BP(k, j, sequence)) {
+    //     if (k == i) {
+    //          Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, 0, 0, k, j));
+    //          Z[j][i] += ZB[j][k];
+    //        } else {
+    //          Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(xi, bpDifference(i, j, structure, 0, 0, i, k - 1, k, j));
+    //          Z[j][i] += Z[k - 1][i] * ZB[j][k];
+    //        }
+    //   }
+    // }
   }
 }
 
@@ -150,7 +185,14 @@ int solveZM(int i, int j, int x, char *sequence, char *structure, double ***ZB, 
   }
 }
 
+double* complexFromTo(double *from, double *to) {
+  to[0] = from[0];
+  to[1] = from[1];
+  return to;
+}
+
 double* addComplex(double *complexA, double *complexB, double *complexSum) {
+  // Works like x += y when calling addComplex(x, y, x)
   complexSum[0] = complexA[0] + complexB[0];
   complexSum[1] = complexA[1] + complexB[1];
   return complexSum;
@@ -163,6 +205,7 @@ double* scalarComplex(double *complex, double scalar, double *complexScalar) {
 }
 
 double* productComplex(double *complexA, double *complexB, double *complexProduct) {
+  // Does NOT work like x *= y when calling productComplex(x, y, x)
   complexProduct[0] = complexA[0] * complexB[0] - complexA[1] * complexB[1];
   complexProduct[1] = complexA[0] * complexB[1] + complexA[1] * complexB[0];
   return complexProduct;
