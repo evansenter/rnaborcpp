@@ -119,12 +119,12 @@ double **Allocate2DMatrix(int a, int b)
 // allocate a matrix of size a*b
 { int i;
   double **Matrix;
-  Matrix=(double **) malloc((a) * sizeof (double *));
+  Matrix=(double **) calloc(a, sizeof (double *));
   if(Matrix == NULL)
         {printf("out of memory\n");
          exit(1);}
   for (i=0; i<a; i++){
-    Matrix[i]=(double *) malloc((b)*sizeof(double));
+    Matrix[i]=(double *) calloc(b, sizeof(double));
     if(Matrix[i] == NULL)
         {printf("out of memory\n");
          exit(1);}

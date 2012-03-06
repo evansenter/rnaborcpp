@@ -27,12 +27,10 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
   ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   
-  for (i = 0; i < seqlen + 1; ++i) {
-    for (j = 0; j < seqlen + 1; ++j) {
-  	  Z[i][j]  = 0;
-  	  ZB[i][j] = 0;
-  	  ZM[i][j] = 0;
-	  }
+  for (d = 0; d <= MIN_PAIR_DIST; ++d) {
+    for (i = 1; i <= seqlen - d; ++i) {
+      Z[i][i + d] = 1;
+    }
   }
   
   for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
