@@ -1,3 +1,6 @@
+// GGGGGCCCCCGGGGGCCCCCGGGGGCCCCC
+// 19049760
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
