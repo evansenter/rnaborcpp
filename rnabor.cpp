@@ -26,6 +26,7 @@ int MAX_NINIO = 300;
 double kT;
 double ML_base;
 double ML_close;
+double temperature = 37.0;
 
 typedef struct {
   int id;
@@ -55,11 +56,12 @@ typedef struct {
   double temperature;
 }  paramT;
 
-paramT *P;
+paramT *P, p;
 
+int CheckSequence(char sequence[MAXSIZE]);
 void *space(unsigned size);
 int encode_char(char c);
-void encodeSequence(const char *sequence);
+short *encode_seq(const char *seq);
 double **Allocate2DMatrix(int m, int n);
 double HP_Energy(int i, int j, short *S0, char* sequence);
 double IL_Energy(int i, int j, int ip, int jp, short *S0);
@@ -70,6 +72,109 @@ double** runMcCaskill(char sequence[MAXSIZE]);
 void solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB);
 void solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM);
 void solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM);
+void Initialize_Params();
+paramT *scale_parameters(void);
+
+paramT *scale_parameters(void)
+{
+  unsigned int i,j,k,l;
+  double tempf;
+  /* if ((fabs(p.temperature - temperature)<1e-6)&&(id == p.id)) return &p; */
+  tempf = ((temperature+K0)/Tmeasure);
+  for (i=0; i<31; i++) 
+    p.hairpin[i] = (int) hairpin37[i]*(tempf);
+  for (i=0; i<=MIN2(30,MAXLOOP); i++) {
+    p.bulge[i] = (int) bulge37[i]*tempf;
+    p.internal_loop[i]= (int) internal_loop37[i]*tempf;
+  }
+  p.lxc = lxc37*tempf;
+  for (; i<=MAXLOOP; i++) {
+    p.bulge[i] = p.bulge[30]+(int)(p.lxc*log((double)(i)/30.));
+    p.internal_loop[i] = p.internal_loop[30]+(int)(p.lxc*log((double)(i)/30.));
+  }
+  for (i=0; i<5; i++)
+    p.F_ninio[i] = (int) F_ninio37[i]*tempf;
+   
+  for (i=0; (i*7)<strlen(Tetraloops); i++) 
+    p.TETRA_ENERGY[i] = TETRA_ENTH37 - (TETRA_ENTH37-TETRA_ENERGY37[i])*tempf;
+  for (i=0; (i*5)<strlen(Triloops); i++) 
+    p.Triloop_E[i] =  Triloop_E37[i];
+   
+  p.MLbase = ML_BASE37*tempf;
+  for (i=0; i<=NBPAIRS; i++) { /* includes AU penalty */
+    p.MLintern[i] = ML_intern37*tempf;
+    p.MLintern[i] +=  (i>2)?TerminalAU:0;
+  }
+  p.MLclosing = ML_closing37*tempf;
+
+  p.TerminalAU = TerminalAU;
+  
+  p.DuplexInit = DuplexInit*tempf;
+
+  /* stacks    G(T) = H - [H - G(T0)]*T/T0 */
+  for (i=0; i<=NBPAIRS; i++)
+    for (j=0; j<=NBPAIRS; j++)
+      p.stack[i][j] = enthalpies[i][j] -
+	(enthalpies[i][j] - stack37[i][j])*tempf;
+
+  /* mismatches */
+  for (i=0; i<=NBPAIRS; i++)
+    for (j=0; j<5; j++)
+      for (k=0; k<5; k++) {
+	p.mismatchI[i][j][k] = mism_H[i][j][k] -
+	  (mism_H[i][j][k] - mismatchI37[i][j][k])*tempf;
+	p.mismatchH[i][j][k] = mism_H[i][j][k] -
+	  (mism_H[i][j][k] - mismatchH37[i][j][k])*tempf;
+	p.mismatchM[i][j][k] = mism_H[i][j][k] -
+	  (mism_H[i][j][k] - mismatchM37[i][j][k])*tempf;
+      }
+   
+  /* dangles */
+  for (i=0; i<=NBPAIRS; i++)
+    for (j=0; j<5; j++) {
+      int dd;
+      dd = dangle5_H[i][j] - (dangle5_H[i][j] - dangle5_37[i][j])*tempf; 
+      p.dangle5[i][j] = (dd>0) ? 0 : dd;  /* must be <= 0 */
+      dd = dangle3_H[i][j] - (dangle3_H[i][j] - dangle3_37[i][j])*tempf;
+      p.dangle3[i][j] = (dd>0) ? 0 : dd;  /* must be <= 0 */
+    }
+  /* interior 1x1 loops */
+  for (i=0; i<=NBPAIRS; i++)
+    for (j=0; j<=NBPAIRS; j++)
+      for (k=0; k<5; k++)
+	for (l=0; l<5; l++) 
+	  p.int11[i][j][k][l] = int11_H[i][j][k][l] -
+	    (int11_H[i][j][k][l] - int11_37[i][j][k][l])*tempf;
+
+  /* interior 2x1 loops */
+  for (i=0; i<=NBPAIRS; i++)
+    for (j=0; j<=NBPAIRS; j++)
+      for (k=0; k<5; k++)
+	for (l=0; l<5; l++) {
+	  int m;
+	  for (m=0; m<5; m++)
+	    p.int21[i][j][k][l][m] = int21_H[i][j][k][l][m] -
+	      (int21_H[i][j][k][l][m] - int21_37[i][j][k][l][m])*tempf;
+	}
+  /* interior 2x2 loops */
+  for (i=0; i<=NBPAIRS; i++)
+    for (j=0; j<=NBPAIRS; j++)
+      for (k=0; k<5; k++)
+	for (l=0; l<5; l++) {
+	  int m,n;
+	  for (m=0; m<5; m++)
+	    for (n=0; n<5; n++)	     
+	      p.int22[i][j][k][l][m][n] = int22_H[i][j][k][l][m][n] -
+		(int22_H[i][j][k][l][m][n]-int22_37[i][j][k][l][m][n])*tempf;
+	}
+
+  strncpy(p.Tetraloops, Tetraloops, 1400);
+  strncpy(p.Triloops, Triloops, 240);
+
+  p.temperature = temperature;
+  p.id = ++id;
+  return &p;
+}
 
 inline int LoopEnergy(int n1, int n2, int type, int type_2,
 		      int si1, int sj1, int sp1, int sq1) {
@@ -172,21 +277,17 @@ int encode_char(char c) {
   return code;
 }
 
-void encodeSequence(const char *sequence) {
-  unsigned int i, l;
-
-  l = strlen(sequence);
-  S = (short *) space(sizeof(short)*(l+2));
-  S1= (short *) space(sizeof(short)*(l+2));
-  /* S1 exists only for the special X K and I bases and energy_set!=0 */
-  S[0] = S1[0] = (short) l;
-
-  for (i=1; i<=l; i++) { /* make numerical encoding of sequence */
-    S[i]= (short) encode_char(toupper(sequence[i-1]));
-    S1[i] = alias[S[i]];   /* for mismatches of nostandard bases */
+short *encode_seq(const char *seq) {
+  unsigned int k,l;
+  short *S0_out;
+  int i;
+  l = strlen(seq);
+  S0_out = (short *) space(sizeof(short)*(l+2));
+  S0_out[0]=l;
+  for (k=1; k<=l; k++) { /* make numerical encoding of seq */
+    S0_out[k]= (short) encode_char(toupper(seq[k-1]));
   }
-  /* for circular folding add first base at position n+1 */
-  S[l+1] = S[1]; S1[l+1]=S1[1];
+  return S0_out;
 }
 
 double **Allocate2DMatrix(int m, int n) {
@@ -258,8 +359,57 @@ int canBasePair(int i, int j, char sequence[MAXSIZE]) {
   }
 }
 
+int CheckSequence(char sequence[MAXSIZE]){     //safe
+  int i;
+  for (i=1;i<strlen(sequence);++i)
+    {
+     if (toupper(sequence[i])!='A' && toupper(sequence[i])!='U' && toupper(sequence[i])!='C' && toupper(sequence[i])!='G'&& toupper(sequence[i])!='T') //check if there are invalid characters
+        {
+         printf("The input string should only contain A,U,T,C,G!\n");
+         exit(1);
+        }
+     else if (toupper(sequence[i])=='T') //change T to U
+        sequence[i]='U';
+     else
+        sequence[i]=toupper(sequence[i]); // change lower case to upper case
+    }
+  return 0;
+}
+
+void Initialize_Params() {
+  P = scale_parameters();//from params.c, gets our parameters, for a given temp
+}
+
 int main(int argc, char *argv[]) {
-  // Initialize_Params();
+  char sequence[] = " GGGGGCCCCCGGGGGCCCCCGGGGGCCCCC"; // Sequences start at index 1
+  CheckSequence(sequence);
+  S0=encode_seq(sequence + 1);
+  seqlen=strlen(sequence)-1;
+  Initialize_Params();
+  
+//   CheckSequence(sequence);
+//   S0=encode_seq(sequence+1);
+//   seqlen=strlen(sequence)-1;
+//   Initialize_Params();
+//   make_pair_matrix();//needed for pair matching
+//   kT = (temperature+K0)*GASCONST/1000.0;
+//   //printf("%.15f\n",kT);
+//   ML_base=(double)P->MLbase/100;
+//   ML_close=(double)P->MLclosing/100;
+//   HPMAX=Allocate2DMatrix( seqlen+1, seqlen+1);
+//   for(i=1;i<seqlen+1;++i)
+//     {for (j=1;j<seqlen+1;++j)
+//         HPMAX[i][j]=0;
+//     }
+//   MaxNumHairpin(sequence,HPMAX);
+//   if(H_MAX>HPMAX[1][seqlen])
+// H_MAX=HPMAX[1][seqlen];
+//   for (i=0;i<H_MAX+1;++i)
+//     {HP[i]=0;
+//       HN[i]=0;}
+//   HairpinPartition(HP,HN,H_MAX,sequence);
+//   double** McCaskillZ;
+//   McCaskillZ=runMcCaskill(sequence);
   
   return 0;
 }
