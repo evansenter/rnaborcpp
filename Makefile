@@ -17,7 +17,7 @@ ParCal.o: ParCal.cpp ParCal.h
 	g++ -m32 -c ParCal.cpp
 
 McCaskill.o: McCaskill.cpp McCaskill.h
-	g++ -m32 -c McCaskill.cpp
+	g++ -I /usr/local/include/lapackpp -m32 -c McCaskill.cpp
 
 misc.o: misc.cpp misc.h
 	g++ -m32 -c misc.cpp

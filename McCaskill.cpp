@@ -16,8 +16,11 @@
 #include "RNAhairpin.h"
 #include "misc.h"
 #include "McCaskill.h"
+#include <lapackpp.h>
+#define LA_COMPLEX_SUPPORT 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define SET_Z(i, j, value) \
 Z[i][j] = value; \
 Z[j][i] = value;
@@ -88,7 +91,7 @@ void solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   
   // Interior loop / bulge / stack / multiloop.
   for (k = i + 1; k <= j - MIN_PAIR_DIST - 1; ++k) {
-    for (l = max(k + MIN_PAIR_DIST + 1, j - MAX_INTERIOR_DIST - 1); l < j; ++l) {
+    for (l = MAX(k + MIN_PAIR_DIST + 1, j - MAX_INTERIOR_DIST - 1); l < j; ++l) {
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
         // are all unpaired.
