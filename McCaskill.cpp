@@ -15,8 +15,12 @@
 #include <limits.h>
 #include "RNAhairpin.h"
 #include "misc.h"
+#include "McCaskill.h"
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
+#define SET_Z(i, j, value) \
+Z[i][j] = value; \
+Z[j][i] = value;
 
 double** runMcCaskill(char sequence[MAXSIZE]) {
   int i, j, d;
@@ -29,59 +33,52 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
   
   for (d = 0; d <= MIN_PAIR_DIST; ++d) {
     for (i = 1; i <= seqlen - d; ++i) {
-      Z[i][i + d] = 1;
+      SET_Z(i, i + d, 1)
     }
   }
   
   for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
     for (i = 1; i <= seqlen - d; ++i) {
       j = i + d;
-	    
-	    if (BP(i, j, sequence)) {
-	      solveZB(i, j, sequence, ZB, ZM);
-	    }
-	    
-	    solveZM(i, j, sequence, ZB, ZM);
-	  }
-  }
-  
-  for (d = 0; d < seqlen; ++d) {
-    for (i = 1; i <= seqlen - d; ++i) {
-	    j = i + d;
-	    
-	    solveZ(i, j, sequence, Z, ZB);
-	  }
+      
+        if (BP(i, j, sequence)) {
+          solveZB(i, j, sequence, ZB, ZM);
+        }
+        
+        solveZM(i, j, sequence, ZB, ZM);
+      
+      solveZ(i, j, sequence, Z, ZB);
+      }
   }
   
   return Z;
 }
 
-int solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) { 
+void solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
-    Z[i][j] = 1;
-    Z[j][i] = 1;
+    SET_Z(i, j, 1)
   } else {
     Z[i][j] += Z[i][j - 1];
     Z[j][i] += Z[j - 1][i];
     
     for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
       // (k, j) is the rightmost base pair in (i, j).
-	    if (BP(k, j, sequence)) {
-	      if (k == i) {
-		      Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT);
-		      Z[j][i] += ZB[j][k];
-		    } else {
-		      Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT);
-		      Z[j][i] += Z[k - 1][i] * ZB[j][k];
-		    }
-	    }
-	  }
+      if (BP(k, j, sequence)) {
+        if (k == i) {
+          Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT);
+        Z[j][i] += ZB[j][k];
+        } else {
+          Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT);
+          Z[j][i] += Z[k - 1][i] * ZB[j][k];
+        }
+      }
+    }
   }
 }
 
-int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+void solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -95,19 +92,19 @@ int solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
         // are all unpaired.
-	      ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT);
-	      ZB[j][i] += ZB[l][k];
-	      
-	      // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
+        ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT);
+        ZB[j][i] += ZB[l][k];
+          
+        // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
         // there is at least one hairpin between (i + 1, k - 1).
         ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1];
         ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
-	    }
-	  }
+      }
+    }
   }
 }
 
-int solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+void solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
   int k;
   
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT);

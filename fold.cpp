@@ -1001,7 +1001,7 @@ float energy_of_struct(const char *string, const char *structure)
 {
   int   energy;
   short *ss, *ss1;
-  static initialized=0;
+  static int initialized=0;
 
   if ((init_length<0)||(initialized==0)) {
     update_fold_params();
@@ -1059,7 +1059,7 @@ int energy_of_struct_pt(const char *string, short * ptable,
 float energy_of_circ_struct(const char *string, const char *structure) {
   int   i, j, length, energy=0, en0, degree=0, type;
   short *ss, *ss1;
-  static initialized=0;
+  static int initialized=0;
 
   if ((init_length<0)||(initialized==0)) {
     update_fold_params();

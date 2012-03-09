@@ -15,6 +15,10 @@
 #include "utils.h"
 #include "params.h"
 /*@unused@*/
+        
+paramT *P, p;
+int anotherglobal;        
+        
 static char rcsid[] UNUSED = "$Id: params.c,v 1.1 2009/02/03 17:41:56 lorenzwi Exp $";
 
 #define PUBLIC

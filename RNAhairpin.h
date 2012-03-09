@@ -1,6 +1,5 @@
-#include"myConst.h"
-double kT;
-double ML_base;
-double ML_close;
-int seqlen;
-short *S0;
+extern double kT;
+extern double ML_base;
+extern double ML_close;
+extern int seqlen;
+extern short *S0;

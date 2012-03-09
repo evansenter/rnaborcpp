@@ -32,8 +32,8 @@ typedef struct {
   char suit;
 } card;
 
-paramT *P, p;
-int anotherglobal;
+extern paramT *P, p;
+extern int anotherglobal;
 
 extern paramT *scale_parameters(void);
 extern paramT *copy_parameters(void);

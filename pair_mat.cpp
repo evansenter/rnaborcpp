@@ -2,6 +2,10 @@
 #include "pair_mat.h"
 #include "fold_vars.h"
 
+short alias[MAXALPHA+1];
+int pair[MAXALPHA+1][MAXALPHA+1];
+int rtype[8];
+
 static const char Law_and_Order[] = "_ACGUTXKI";
 static int BP_pair[NBASES][NBASES]=
 /* _  A  C  G  U  X  K  I */

@@ -14,6 +14,12 @@
 #include"McCaskill.h"
 #include"limits.h"
 
+double kT;
+double ML_base;
+double ML_close;
+int seqlen;
+short *S0;
+
 PRIVATE short *encode_seq(const char *seq);
 int MaxNumHairpin(char sequence[MAXSIZE], double **HPMAX);
 double HairpinPartition(double *HP,double *HN, int H_MAX, char sequence[MAXSIZE]);
@@ -111,7 +117,7 @@ PRIVATE short *encode_seq(const char *seq) {
   short *S0_out;
   int i;
   l = strlen(seq);
-  S0_out = (short *) space(sizeof(short)*(l+2));
+  S0_out = (short *) calloc(1, (size_t) sizeof(short)*(l+2));
   S0_out[0]=l;
   for (k=1; k<=l; k++) { /* make numerical encoding of seq */
     S0_out[k]= (short) encode_char(toupper(seq[k-1]));
@@ -144,60 +150,60 @@ int MaxNumHairpin(char sequence[MAXSIZE], double **HPMAX){
 }
 
 /*The following function is the main recursion*/
-double HairpinPartition(double *HP,double *HN, int H_MAX, char sequence[MAXSIZE])
-{ double ***ZB;
-  double ***ZM;
-  double ***ZM1;
-  double **Z;
-  double **N;
-  Z=Allocate2DMatrix( seqlen+1, H_MAX+1);
-  N=Allocate2DMatrix( seqlen+1, H_MAX+1);
-  ZB=Allocate3DMatrix( seqlen+1,seqlen+1, H_MAX+1);
-  ZM=Allocate3DMatrix( seqlen+1,seqlen+1, H_MAX+1);
-  ZM1=Allocate3DMatrix( seqlen+1,seqlen+1, H_MAX+1);
-  int i,j,r,d,h;
-  for(i=1;i<seqlen+1;++i)
-    {for (j=1;j<seqlen+1;++j)
-	{for(r=1;r<H_MAX+1;++r)
-	    { ZB[i][j][r]=0;
-	      ZM[i][j][r]=0;
-	      ZM1[i][j][r]=0;
-	    }
-	}
-    }
-  for (i=1;i<seqlen+1;++i)
-    {for(j=1;j<H_MAX+1;++j)
-	{Z[i][j]=0;
-	  N[i][j]=0; 
-	}
-    }
-  for(h=0;h<H_MAX+1;++h)
-    {if(h==0)
-	{
-	  HP[h]=1.0;
-	  HN[h]=1.0;
-	  for(i=0;i<seqlen+1;++i)
-	    {Z[i][0]=1;
-	      N[i][0]=1;
-	    }
-	}
-      else
-	{ 
-	  for(d=4;d<seqlen;++d)
-	    {for(i=1;i<seqlen-d+1;++i)
-		{j=i+d;
-		  if(BP(i,j,sequence))
-		    GetZB(ZB,ZM,ZM1,i,j,h,sequence);
-		  GetZM1(ZB,ZM,ZM1,i,j,h,sequence);
-		  GetZM(ZM,ZM1,i,j,h,sequence);
-		}
-	    }
-	  for(j=1;j<seqlen+1;++j)
-	    {GetZ(j,h,ZB,Z,N,sequence);
-	    }
-	  HP[h]=Z[seqlen][h];
-	  HN[h]=N[seqlen][h];
-	}
-    }
+double HairpinPartition(double *HP,double *HN, int H_MAX, char sequence[MAXSIZE]) { 
+  //   double ***ZB;
+  //   double ***ZM;
+  //   double ***ZM1;
+  //   double **Z;
+  //   double **N;
+  //   Z=Allocate2DMatrix( seqlen+1, H_MAX+1);
+  //   N=Allocate2DMatrix( seqlen+1, H_MAX+1);
+  //   ZB=Allocate3DMatrix( seqlen+1,seqlen+1, H_MAX+1);
+  //   ZM=Allocate3DMatrix( seqlen+1,seqlen+1, H_MAX+1);
+  //   ZM1=Allocate3DMatrix( seqlen+1,seqlen+1, H_MAX+1);
+  //   int i,j,r,d,h;
+  //   for(i=1;i<seqlen+1;++i)
+  //     {for (j=1;j<seqlen+1;++j)
+  // {for(r=1;r<H_MAX+1;++r)
+  //     { ZB[i][j][r]=0;
+  //       ZM[i][j][r]=0;
+  //       ZM1[i][j][r]=0;
+  //     }
+  // }
+  //     }
+  //   for (i=1;i<seqlen+1;++i)
+  //     {for(j=1;j<H_MAX+1;++j)
+  // {Z[i][j]=0;
+  //   N[i][j]=0; 
+  // }
+  //     }
+  //   for(h=0;h<H_MAX+1;++h)
+  //     {if(h==0)
+  // {
+  //   HP[h]=1.0;
+  //   HN[h]=1.0;
+  //   for(i=0;i<seqlen+1;++i)
+  //     {Z[i][0]=1;
+  //       N[i][0]=1;
+  //     }
+  // }
+  //       else
+  // { 
+  //   for(d=4;d<seqlen;++d)
+  //     {for(i=1;i<seqlen-d+1;++i)
+  //   {j=i+d;
+  //     if(BP(i,j,sequence))
+  //       GetZB(ZB,ZM,ZM1,i,j,h,sequence);
+  //     GetZM1(ZB,ZM,ZM1,i,j,h,sequence);
+  //     GetZM(ZM,ZM1,i,j,h,sequence);
+  //   }
+  //     }
+  //   for(j=1;j<seqlen+1;++j)
+  //     {GetZ(j,h,ZB,Z,N,sequence);
+  //     }
+  //   HP[h]=Z[seqlen][h];
+  //   HN[h]=N[seqlen][h];
+  // }
+  //     }
 }
 
