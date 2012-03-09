@@ -1,5 +1,3 @@
-
-
 RNAhairpin: convert_Vienna.o energy_par.o fold.o fold_vars.o misc.o pair_mat.o params.o ParCal.o RNAhairpin.o utils.o McCaskill.o
 	gcc -m32 -o RNAhairpin -lm convert_Vienna.o energy_par.o fold.o fold_vars.o ParCal.o McCaskill.o misc.o pair_mat.o params.o RNAhairpin.o utils.o
 
@@ -42,5 +40,3 @@ install: RNAhairpin
 	
 clean:
 	rm -fr *.o
-
-
