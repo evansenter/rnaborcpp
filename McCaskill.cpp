@@ -17,13 +17,14 @@
 #include "misc.h"
 #include "McCaskill.h"
 #include <lapackpp.h>
-#define LA_COMPLEX_SUPPORT 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define SET_Z(i, j, value) \
 Z[i][j] = value; \
 Z[j][i] = value;
+
+typedef std::complex<double> dcomplex;
 
 double** runMcCaskill(char sequence[MAXSIZE]) {
   int i, j, d;
@@ -53,6 +54,61 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
       solveZ(i, j, sequence, Z, ZB);
       }
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  int row = 1000;
+  int col = 1000;
+  
+  dcomplex **squareMatrix = new dcomplex*[row];
+  for (i = 0; i < col; i++) {
+    squareMatrix[i] = new dcomplex[col];
+  }  
+    
+  LaGenMatComplex A(row, col);
+  LaVectorComplex X(col);
+  LaVectorComplex B(col);
+  
+  for (i = 0; i < row; i++) {
+    for (j = 0; j < col; j++) {
+      squareMatrix[i][j] = dcomplex(i, j);
+      
+      A(i, j).r = i + j + 0.5;
+      A(i, j).i = -(i + j + 0.5);
+    }
+    
+    B(i).r = i + 0.5;
+    B(i).i = -(i + 0.5);
+  }
+  // 
+  // std::cout << A << std::endl;
+  // 
+  // std::complex<double> *x = new std::complex<double>(3, 2);
+  // std::complex<double> *y = new std::complex<double>(4, 5);
+  // 
+  // x + y;
+  // 
+  // std::cout << x -> real() << std::endl;
+  
+  LaLinearSolveIP(A, X, B);
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   return Z;
 }
