@@ -20,31 +20,24 @@
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define ZERO_C dcomplex(0, 0)
+#define ONE_C  dcomplex(1, 0)
 #define SET_Z(i, j, value) \
 Z[i][j] = value; \
 Z[j][i] = value;
 
-typedef std::complex<double> dcomplex;
-
-double** runMcCaskill(char sequence[MAXSIZE]) {
+dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   int root, i, j, d;
-  double **Z;
-  double **ZB;
-  double **ZM;
   
-  Z  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
-  
-  dcomplex **cZ           = new dcomplex*[seqlen + 1];
-  dcomplex **cZB          = new dcomplex*[seqlen + 1];
-  dcomplex **cZM          = new dcomplex*[seqlen + 1];
+  dcomplex **Z           = new dcomplex*[seqlen + 1];
+  dcomplex **ZB          = new dcomplex*[seqlen + 1];
+  dcomplex **ZM          = new dcomplex*[seqlen + 1];
   dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
   
   for (i = 0; i <= seqlen; i++) {
-    cZ[i]              = new dcomplex[seqlen + 1];
-    cZB[i]             = new dcomplex[seqlen + 1];
-    cZM[i]             = new dcomplex[seqlen + 1];
+    Z[i]              = new dcomplex[seqlen + 1];
+    ZB[i]             = new dcomplex[seqlen + 1];
+    ZM[i]             = new dcomplex[seqlen + 1];
     rootsOfUnity[i]    = new dcomplex[2];
     rootsOfUnity[i][0] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
   }
@@ -53,16 +46,16 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
     // Flush the matrices.
     for (i = 0; i <= seqlen; ++i) {
       for (j = 0; j <= seqlen; ++j) {
-        Z[i][j]  = 0;
-        ZB[i][j] = 0;
-        ZM[i][j] = 0;
+        Z[i][j]  = ZERO_C;
+        ZB[i][j] = ZERO_C;
+        ZM[i][j] = ZERO_C;
       }  
     }
   
     // Set base case for Z.
     for (d = 0; d <= MIN_PAIR_DIST; ++d) {
       for (i = 1; i <= seqlen - d; ++i) {
-        SET_Z(i, i + d, 1)
+        SET_Z(i, i + d, ONE_C)
       }
     }
     
@@ -71,47 +64,55 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
         j = i + d;
       
         if (BP(i, j, sequence)) {
-          solveZB(i, j, sequence, ZB, ZM);
+          solveZB(i, j, rootsOfUnity[i][0], sequence, ZB, ZM);
         }
         
-        solveZM(i, j, sequence, ZB, ZM);
+        solveZM(i, j, rootsOfUnity[i][0], sequence, ZB, ZM);
       
-        solveZ(i, j, sequence, Z, ZB);
+        solveZ(i, j, rootsOfUnity[i][0], sequence, Z, ZB);
       }
     }
-  
-    // LaGenMatComplex A(row, col);
-    // LaVectorComplex X(col);
-    // LaVectorComplex B(col);
-    // 
-    // for (i = 0; i < row; i++) {
-    //   for (j = 0; j < col; j++) {
-    //     squareMatrix[i][j] = dcomplex(i, j);
-    //     
-    //     A(i, j).r = i + j + 0.5;
-    //     A(i, j).i = -(i + j + 0.5);
-    //   }
-    //   
-    //   B(i).r = i + 0.5;
-    //   B(i).i = -(i + 0.5);
-    // }
-    // 
-    // std::cout << A << std::endl;
-    // 
-    // std::complex<double> *x = new std::complex<double>(3, 2);
-    // std::complex<double> *y = new std::complex<double>(4, 5);
-    // 
-    // x + y;
-    // 
-    // std::cout << x -> real() << std::endl;
-    // 
-    // LaLinearSolveIP(A, X, B);
+    
+    rootsOfUnity[root][1] = Z[1][seqlen];
+    
+    std::cout << Z[1][seqlen] << std::endl;
+    std::cout << Z[seqlen][1] << std::endl;
+    std::cout << rootsOfUnity[root][0] << std::endl;
+    std::cout << rootsOfUnity[root][1] << std::endl;
+    std::cout << std::endl;
   }
+  
+  // LaGenMatComplex A(row, col);
+  // LaVectorComplex X(col);
+  // LaVectorComplex B(col);
+  // 
+  // for (i = 0; i < row; i++) {
+  //   for (j = 0; j < col; j++) {
+  //     squareMatrix[i][j] = dcomplex(i, j);
+  //     
+  //     A(i, j).r = i + j + 0.5;
+  //     A(i, j).i = -(i + j + 0.5);
+  //   }
+  //   
+  //   B(i).r = i + 0.5;
+  //   B(i).i = -(i + 0.5);
+  // }
+  // 
+  // std::cout << A << std::endl;
+  // 
+  // std::complex<double> *x = new std::complex<double>(3, 2);
+  // std::complex<double> *y = new std::complex<double>(4, 5);
+  // 
+  // x + y;
+  // 
+  // std::cout << x -> real() << std::endl;
+  // 
+  // LaLinearSolveIP(A, X, B);
   
   return Z;
 }
 
-void solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) { 
+void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<double> **Z, std::complex<double> **ZB) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
@@ -135,7 +136,7 @@ void solveZ(int i, int j, char sequence[MAXSIZE], double **Z, double **ZB) {
   }
 }
 
-void solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<double> **ZB, std::complex<double> **ZM) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -161,7 +162,7 @@ void solveZB(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
   }
 }
 
-void solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) { 
+void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<double> **ZB, std::complex<double> **ZM) { 
   int k;
   
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT);
@@ -178,6 +179,80 @@ void solveZM(int i, int j, char sequence[MAXSIZE], double **ZB, double **ZM) {
         ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * exp(-ML_base / kT);
         ZM[j][i] += ZB[j][k] * ZM[k - 1][i];
       }
+    }
+  }
+}
+
+int *getBasePairList(char *secStr) {
+  /* Returns list L of ordered pairs (i,j) where i<j and
+   * positions i,j occupied by balancing parentheses
+   * For linear time efficiency, use stack
+   * Assume that secStr is string consisting of '(',')' and '.'
+   * Values -2,-1 returned mean NOT well balanced
+   * -2 means too many ( with respect to )
+   * -1 means too many ) with respect to (
+   * If 1,-1 not returned, then return (possibly empty) list */
+  
+  int len = strlen(secStr);
+  int *S = (int *) calloc(len/2,sizeof(int));  //empty stack
+  int *L = (int *) calloc(2*len*(len-1)/2+1, sizeof(int)); /* initially empty
+							     * list of base 
+							     * pairs */
+  int j, k = 0;
+  char ch;
+
+  /* First position holds the number of base pairs */
+  L[0] = 0;
+  for (j=1;j<=len;j++)
+    L[j] = -1;
+
+  for (j=1;j<=len;j++) {
+    ch = secStr[j-1];
+    if (ch == '(')
+      S[k++] = j;
+    else if (ch == ')') {
+      if (k==0) {
+	/* There is something wrong with the structure. */
+	L[0] = -1; 
+	return L;
+      }
+      else {
+        L[S[--k]] = j;
+	L[j] = S[k];
+	L[0]++;
+      }
+    }
+  }
+
+  if (k != 0) {
+    /* There is something wrong with the structure. */
+    L[0] = -2;
+  }
+  
+  free(S);
+
+  return L;
+}
+
+/* Number of base pairs in the region i to j in bps */
+int numbp(int i, int j, int *bps) {
+  int n=0;
+  int k;
+  for (k=i;k<=j;k++)
+    if ( k<bps[k] && bps[k]<=j )
+      n++;
+  return n;
+}
+
+void initialize_NumBP(int **NumBP, int *bps, int n){
+  int d,i,j;
+  for (i = 1; i <= n; i++)
+    for (j = 1; j <= n; j++)
+      NumBP[i][j] = 0;
+  for (d = MIN_PAIR_DIST+1; d < n; d++) {
+    for (i = 1; i <= n - d; i++) {
+      j = i + d;
+      NumBP[i][j] = numbp(i,j,bps);
     }
   }
 }

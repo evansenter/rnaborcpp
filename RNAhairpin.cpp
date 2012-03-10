@@ -33,7 +33,7 @@ int main(int argc, char *argv[]){
   double **HPMAX;
   double HP[MAXSIZE],HN[MAXSIZE];
   int H_MAX=INT_MAX;
-  double totalpar; //total partition function
+  std::complex<double> totalpar; //total partition function
   if (argc==3||argc==5)
     {
       i=1;
@@ -88,16 +88,16 @@ int main(int argc, char *argv[]){
       {HP[i]=0;
         HN[i]=0;}
     HairpinPartition(HP,HN,H_MAX,sequence);
-    double** McCaskillZ;
+    std::complex<double>** McCaskillZ;
     McCaskillZ=runMcCaskill(sequence);
     totalpar=McCaskillZ[1][seqlen];
     printf("The RNA sequence is %s:\n",sequence+1);
-    printf("The total number of structures is %.1f.\n", McCaskillZ[seqlen][1]);
-    printf("The first column is the number of hairpins in a secondary structure.\n");
-    printf("The partition function and number of secondary structure with k-hairpin is:\n");
-    printf("%-20s%-30s%-30s%-30s\n","K-hairpin","Number","Partition Function","Probability");
-    for (h=0;h<H_MAX+1;++h)
-      printf("%-8d\t%-30.15lf\t%-30.15lf\t%-30.15lf\n",h,HN[h],HP[h],HP[h]/totalpar);
+    printf("The total number of structures is (%f, %fi).\n", McCaskillZ[seqlen][1].real(), McCaskillZ[seqlen][1].imag());
+    // printf("The first column is the number of hairpins in a secondary structure.\n");
+    // printf("The partition function and number of secondary structure with k-hairpin is:\n");
+    // printf("%-20s%-30s%-30s%-30s\n","K-hairpin","Number","Partition Function","Probability");
+    // for (h=0;h<H_MAX+1;++h)
+    //   printf("%-8d\t%-30.15lf\t%-30.15lf\t%-30.15lf\n",h,HN[h],HP[h],HP[h]/totalpar);
     }
   else{
     printf("Usage:");
