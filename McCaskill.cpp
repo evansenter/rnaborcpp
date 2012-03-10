@@ -27,66 +27,86 @@ Z[j][i] = value;
 typedef std::complex<double> dcomplex;
 
 double** runMcCaskill(char sequence[MAXSIZE]) {
-  int i, j, d;
+  int root, i, j, d;
   double **Z;
   double **ZB;
   double **ZM;
-  dcomplex *rootsOfUnity = new dcomplex[seqlen + 1];
   
   Z  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   
+  dcomplex **cZ           = new dcomplex*[seqlen + 1];
+  dcomplex **cZB          = new dcomplex*[seqlen + 1];
+  dcomplex **cZM          = new dcomplex*[seqlen + 1];
+  dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
+  
   for (i = 0; i <= seqlen; i++) {
-    rootsOfUnity[i] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
+    cZ[i]              = new dcomplex[seqlen + 1];
+    cZB[i]             = new dcomplex[seqlen + 1];
+    cZM[i]             = new dcomplex[seqlen + 1];
+    rootsOfUnity[i]    = new dcomplex[2];
+    rootsOfUnity[i][0] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
   }
   
-  for (d = 0; d <= MIN_PAIR_DIST; ++d) {
-    for (i = 1; i <= seqlen - d; ++i) {
-      SET_Z(i, i + d, 1)
+  for (root = 0; root <= seqlen; ++root) {
+    // Flush the matrices.
+    for (i = 0; i <= seqlen; ++i) {
+      for (j = 0; j <= seqlen; ++j) {
+        Z[i][j]  = 0;
+        ZB[i][j] = 0;
+        ZM[i][j] = 0;
+      }  
     }
-  }
   
-  for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
-    for (i = 1; i <= seqlen - d; ++i) {
-      j = i + d;
-      
-      if (BP(i, j, sequence)) {
-        solveZB(i, j, sequence, ZB, ZM);
+    // Set base case for Z.
+    for (d = 0; d <= MIN_PAIR_DIST; ++d) {
+      for (i = 1; i <= seqlen - d; ++i) {
+        SET_Z(i, i + d, 1)
       }
-        
-      solveZM(i, j, sequence, ZB, ZM);
-      
-      solveZ(i, j, sequence, Z, ZB);
     }
-  }
+    
+    for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
+      for (i = 1; i <= seqlen - d; ++i) {
+        j = i + d;
+      
+        if (BP(i, j, sequence)) {
+          solveZB(i, j, sequence, ZB, ZM);
+        }
+        
+        solveZM(i, j, sequence, ZB, ZM);
+      
+        solveZ(i, j, sequence, Z, ZB);
+      }
+    }
   
-  // LaGenMatComplex A(row, col);
-  // LaVectorComplex X(col);
-  // LaVectorComplex B(col);
-  // 
-  // for (i = 0; i < row; i++) {
-  //   for (j = 0; j < col; j++) {
-  //     squareMatrix[i][j] = dcomplex(i, j);
-  //     
-  //     A(i, j).r = i + j + 0.5;
-  //     A(i, j).i = -(i + j + 0.5);
-  //   }
-  //   
-  //   B(i).r = i + 0.5;
-  //   B(i).i = -(i + 0.5);
-  // }
-  // 
-  // std::cout << A << std::endl;
-  // 
-  // std::complex<double> *x = new std::complex<double>(3, 2);
-  // std::complex<double> *y = new std::complex<double>(4, 5);
-  // 
-  // x + y;
-  // 
-  // std::cout << x -> real() << std::endl;
-  // 
-  // LaLinearSolveIP(A, X, B);
+    // LaGenMatComplex A(row, col);
+    // LaVectorComplex X(col);
+    // LaVectorComplex B(col);
+    // 
+    // for (i = 0; i < row; i++) {
+    //   for (j = 0; j < col; j++) {
+    //     squareMatrix[i][j] = dcomplex(i, j);
+    //     
+    //     A(i, j).r = i + j + 0.5;
+    //     A(i, j).i = -(i + j + 0.5);
+    //   }
+    //   
+    //   B(i).r = i + 0.5;
+    //   B(i).i = -(i + 0.5);
+    // }
+    // 
+    // std::cout << A << std::endl;
+    // 
+    // std::complex<double> *x = new std::complex<double>(3, 2);
+    // std::complex<double> *y = new std::complex<double>(4, 5);
+    // 
+    // x + y;
+    // 
+    // std::cout << x -> real() << std::endl;
+    // 
+    // LaLinearSolveIP(A, X, B);
+  }
   
   return Z;
 }
