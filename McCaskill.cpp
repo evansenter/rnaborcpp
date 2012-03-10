@@ -31,9 +31,15 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
   double **Z;
   double **ZB;
   double **ZM;
+  dcomplex *rootsOfUnity = new dcomplex[seqlen + 1];
+  
   Z  = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   ZB = Allocate2DMatrix(seqlen + 1, seqlen + 1);
   ZM = Allocate2DMatrix(seqlen + 1, seqlen + 1);
+  
+  for (i = 0; i <= seqlen; i++) {
+    rootsOfUnity[i] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
+  }
   
   for (d = 0; d <= MIN_PAIR_DIST; ++d) {
     for (i = 1; i <= seqlen - d; ++i) {
@@ -45,50 +51,31 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
     for (i = 1; i <= seqlen - d; ++i) {
       j = i + d;
       
-        if (BP(i, j, sequence)) {
-          solveZB(i, j, sequence, ZB, ZM);
-        }
+      if (BP(i, j, sequence)) {
+        solveZB(i, j, sequence, ZB, ZM);
+      }
         
-        solveZM(i, j, sequence, ZB, ZM);
+      solveZM(i, j, sequence, ZB, ZM);
       
       solveZ(i, j, sequence, Z, ZB);
-      }
-  }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  int row = 1000;
-  int col = 1000;
-  
-  dcomplex **squareMatrix = new dcomplex*[row];
-  for (i = 0; i < col; i++) {
-    squareMatrix[i] = new dcomplex[col];
-  }  
-    
-  LaGenMatComplex A(row, col);
-  LaVectorComplex X(col);
-  LaVectorComplex B(col);
-  
-  for (i = 0; i < row; i++) {
-    for (j = 0; j < col; j++) {
-      squareMatrix[i][j] = dcomplex(i, j);
-      
-      A(i, j).r = i + j + 0.5;
-      A(i, j).i = -(i + j + 0.5);
     }
-    
-    B(i).r = i + 0.5;
-    B(i).i = -(i + 0.5);
   }
+  
+  // LaGenMatComplex A(row, col);
+  // LaVectorComplex X(col);
+  // LaVectorComplex B(col);
+  // 
+  // for (i = 0; i < row; i++) {
+  //   for (j = 0; j < col; j++) {
+  //     squareMatrix[i][j] = dcomplex(i, j);
+  //     
+  //     A(i, j).r = i + j + 0.5;
+  //     A(i, j).i = -(i + j + 0.5);
+  //   }
+  //   
+  //   B(i).r = i + 0.5;
+  //   B(i).i = -(i + 0.5);
+  // }
   // 
   // std::cout << A << std::endl;
   // 
@@ -98,17 +85,8 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
   // x + y;
   // 
   // std::cout << x -> real() << std::endl;
-  
-  LaLinearSolveIP(A, X, B);
-  
-  
-  
-  
-  
-  
-  
-  
-  
+  // 
+  // LaLinearSolveIP(A, X, B);
   
   return Z;
 }
