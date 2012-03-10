@@ -27,14 +27,17 @@ Z[i][j] = value; \
 Z[j][i] = value;
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
-  int root, i, j, d;
+  // Variable declarations.
+  int root, i, j, d, *basePairs, **basePairCounts;
+  char structure[seqlen];
   
   dcomplex **Z           = new dcomplex*[seqlen + 1];
   dcomplex **ZB          = new dcomplex*[seqlen + 1];
   dcomplex **ZM          = new dcomplex*[seqlen + 1];
   dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
   
-  for (i = 0; i <= seqlen; i++) {
+  // Matrix allocation.
+  for (i = 0; i <= seqlen; ++i) {
     Z[i]              = new dcomplex[seqlen + 1];
     ZB[i]             = new dcomplex[seqlen + 1];
     ZM[i]             = new dcomplex[seqlen + 1];
@@ -42,6 +45,29 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     rootsOfUnity[i][0] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
   }
   
+  // This will need to be parameterized.
+  for (i = 0; i < seqlen; ++i) {
+    structure[i] = '.';
+    structure[i] = seqlen % 2 != 0 && i + 1 == seqlen ? '.' : (i % 2 == 0 ? '(' : ')');
+  }
+  
+  basePairs      = getBasePairList(structure);
+  basePairCounts = fillBasePairCounts(basePairs, seqlen);
+  
+  // std::cout << "Base pairs." << std::endl;
+  // std::cout << structure << std::endl;
+  // for (i = 0; i <= seqlen; ++i) {
+  //   std::cout << i << ", " << basePairs[i] << std::endl;
+  // }
+  // 
+  // std::cout << "Base pair matrix." << std::endl;
+  // for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
+  //   for (i = 1; i <= seqlen - d; ++i) {
+  //     std::cout << i << ", " << i + d << ": " << basePairCounts[i][i + d] << std::endl;
+  //   }
+  // }
+  
+  // Start main recursions.
   for (root = 0; root <= seqlen; ++root) {
     // Flush the matrices.
     for (i = 0; i <= seqlen; ++i) {
@@ -49,7 +75,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
         Z[i][j]  = ZERO_C;
         ZB[i][j] = ZERO_C;
         ZM[i][j] = ZERO_C;
-      }  
+      }
     }
   
     // Set base case for Z.
@@ -64,12 +90,12 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
         j = i + d;
       
         if (BP(i, j, sequence)) {
-          solveZB(i, j, rootsOfUnity[i][0], sequence, ZB, ZM);
+          solveZB(i, j, rootsOfUnity[i][0], sequence, basePairCounts, ZB, ZM);
         }
         
-        solveZM(i, j, rootsOfUnity[i][0], sequence, ZB, ZM);
+        solveZM(i, j, rootsOfUnity[i][0], sequence, basePairCounts, ZB, ZM);
       
-        solveZ(i, j, rootsOfUnity[i][0], sequence, Z, ZB);
+        solveZ(i, j, rootsOfUnity[i][0], sequence, basePairCounts, Z, ZB);
       }
     }
     
@@ -112,7 +138,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   return Z;
 }
 
-void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<double> **Z, std::complex<double> **ZB) { 
+void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int **basePairCounts, std::complex<double> **Z, std::complex<double> **ZB) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
@@ -136,7 +162,7 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<doubl
   }
 }
 
-void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<double> **ZB, std::complex<double> **ZM) { 
+void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -162,7 +188,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<doub
   }
 }
 
-void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<double> **ZB, std::complex<double> **ZM) { 
+void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM) { 
   int k;
   
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT);
@@ -183,76 +209,74 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], std::complex<doub
   }
 }
 
-int *getBasePairList(char *secStr) {
-  /* Returns list L of ordered pairs (i,j) where i<j and
-   * positions i,j occupied by balancing parentheses
-   * For linear time efficiency, use stack
-   * Assume that secStr is string consisting of '(',')' and '.'
-   * Values -2,-1 returned mean NOT well balanced
-   * -2 means too many ( with respect to )
-   * -1 means too many ) with respect to (
-   * If 1,-1 not returned, then return (possibly empty) list */
-  
-  int len = strlen(secStr);
-  int *S = (int *) calloc(len/2,sizeof(int));  //empty stack
-  int *L = (int *) calloc(2*len*(len-1)/2+1, sizeof(int)); /* initially empty
-							     * list of base 
-							     * pairs */
-  int j, k = 0;
-  char ch;
+int* getBasePairList(char *structure) {
+  // Assumes that structure is 0-indexed.
+  int length     = strlen(structure);
+  int *stack     = (int *) calloc(length, sizeof(int));
+  int *pairsList = (int *) calloc(length + 1, sizeof(int));
+  int i, j = 0;
+  char symbol;
 
-  /* First position holds the number of base pairs */
-  L[0] = 0;
-  for (j=1;j<=len;j++)
-    L[j] = -1;
+  // First position holds the number of base pairs.
+  for (i = 1; i <= length; ++i) {
+    pairsList[i] = -1;
+  }
 
-  for (j=1;j<=len;j++) {
-    ch = secStr[j-1];
-    if (ch == '(')
-      S[k++] = j;
-    else if (ch == ')') {
-      if (k==0) {
-	/* There is something wrong with the structure. */
-	L[0] = -1; 
-	return L;
-      }
-      else {
-        L[S[--k]] = j;
-	L[j] = S[k];
-	L[0]++;
+  for (i = 1; i <= length; ++i) {
+    symbol = structure[i - 1];
+    
+    if (symbol == '(') {
+      stack[j++] = i;
+    } else if (symbol == ')') {
+      if (j == 0) {
+        std::cout << "There is something wrong with the structure, too many ')'" << std::endl;
+        pairsList[0] = -1; 
+        return pairsList;
+      } else {
+        pairsList[stack[--j]] = i;
+	      pairsList[i] = stack[j];
+	      pairsList[0]++;
       }
     }
   }
 
-  if (k != 0) {
-    /* There is something wrong with the structure. */
-    L[0] = -2;
+  if (j != 0) {
+    std::cout << "There is something wrong with the structure, too many '('" << std::endl;
+    pairsList[0] = -2;
   }
   
-  free(S);
+  free(stack);
 
-  return L;
+  return pairsList;
 }
 
-/* Number of base pairs in the region i to j in bps */
-int numbp(int i, int j, int *bps) {
-  int n=0;
+/* Number of base pairs in the region i to j in basePairs */
+int numberOfBasePairs(int i, int j, int *basePairs) {
+  int n = 0;
   int k;
-  for (k=i;k<=j;k++)
-    if ( k<bps[k] && bps[k]<=j )
+  for (k = i; k <= j; ++k) {
+    // If position k opens a b.p. '(' and is closed within the range [i, j], increment n
+    if (k < basePairs[k] && basePairs[k] <= j) {
       n++;
+    }
+  }
+  
   return n;
 }
 
-void initialize_NumBP(int **NumBP, int *bps, int n){
-  int d,i,j;
-  for (i = 1; i <= n; i++)
-    for (j = 1; j <= n; j++)
-      NumBP[i][j] = 0;
-  for (d = MIN_PAIR_DIST+1; d < n; d++) {
-    for (i = 1; i <= n - d; i++) {
-      j = i + d;
-      NumBP[i][j] = numbp(i,j,bps);
+int** fillBasePairCounts(int *basePairs, int n) {
+  int i, d, **basePairCounts;
+  
+  basePairCounts = (int **) calloc(n + 1, sizeof(int *));
+  for (i = 1; i <= n; ++i) {
+    basePairCounts[i] = (int *) calloc(n + 1, sizeof(int));
+  }
+  
+  for (d = MIN_PAIR_DIST + 1; d < n; ++d) {
+    for (i = 1; i <= n - d; ++i) {
+      basePairCounts[i][i + d] = numberOfBasePairs(i, i + d, basePairs);
     }
   }
+  
+  return basePairCounts;
 }
