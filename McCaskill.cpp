@@ -92,34 +92,12 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     rootsOfUnity[root][1] = Z[1][seqlen];
   }
   
-  for (i = 0; i <= seqlen; ++i) {
-    std::cout << rootsOfUnity[i][0].real() << ", " << rootsOfUnity[i][0].imag() << " -> " << rootsOfUnity[i][1].real() << ", " << rootsOfUnity[i][1].imag() << std::endl;
-  }
-  
-  LaGenMatComplex A(seqlen + 1, seqlen + 1);
-  LaVectorComplex X(seqlen + 1);
-  LaVectorComplex B(seqlen + 1);
-  
-  for (i = 0; i <= seqlen; ++i) {
-    for (j = 0; j <= seqlen; ++j) {
-      A(i, j).r = pow(rootsOfUnity[i][1], j).real();
-      A(i, j).i = pow(rootsOfUnity[i][1], j).imag();
-    }
-    
-    B(i).r = rootsOfUnity[i][0].real();
-    B(i).i = rootsOfUnity[i][0].imag();
-  }
-  
-  LaLinearSolveIP(A, X, B);
-  
-  std::cout << A << std::endl;
-  std::cout << X << std::endl;
-  std::cout << B << std::endl;
+  solveLinearSystem(rootsOfUnity);
   
   return Z;
 }
 
-void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **Z, std::complex<double> **ZB) { 
+void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, dcomplex **Z, dcomplex **ZB) { 
   int k;
   
   if(j - i < MIN_PAIR_DIST + 1) {
@@ -143,7 +121,7 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
   }
 }
 
-void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM) { 
+void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, dcomplex **ZB, dcomplex **ZM) { 
   // (i, j) assumed to b.p. in here.
   int k, l;
   
@@ -169,7 +147,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   }
 }
 
-void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM) { 
+void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, dcomplex **ZB, dcomplex **ZM) { 
   int k;
   
   ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(x, jPairedIn(i, j, basePairs));
@@ -188,6 +166,35 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
       }
     }
   }
+}
+
+void solveLinearSystem(dcomplex **rootsOfUnity) {
+  int i, j;
+  
+  for (i = 0; i <= seqlen; ++i) {
+    std::cout << rootsOfUnity[i][0].real() << ", " << rootsOfUnity[i][0].imag() << " -> " << rootsOfUnity[i][1].real() << ", " << rootsOfUnity[i][1].imag() << std::endl;
+  }
+  
+  // Might need to free this memory.
+  LaGenMatComplex A(seqlen + 1, seqlen + 1);
+  LaVectorComplex X(seqlen + 1);
+  LaVectorComplex B(seqlen + 1);
+  
+  for (i = 0; i <= seqlen; ++i) {
+    for (j = 0; j <= seqlen; ++j) {
+      A(i, j).r = pow(rootsOfUnity[i][1], j).real();
+      A(i, j).i = pow(rootsOfUnity[i][1], j).imag();
+    }
+    
+    B(i).r = rootsOfUnity[i][0].real();
+    B(i).i = rootsOfUnity[i][0].imag();
+  }
+  
+  LaLinearSolveIP(A, X, B);
+  
+  std::cout << A << std::endl;
+  std::cout << X << std::endl;
+  std::cout << B << std::endl;
 }
 
 int jPairedTo(int i, int j, int *basePairs) {
