@@ -20,6 +20,7 @@
 #include "misc.h"
 #include "McCaskill.h"
 #include <lapackpp.h>
+#define STRUCTURE_COUNT 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -104,17 +105,28 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
     SET_Z(i, j, 1)
   } else {
     Z[i][j] += Z[i][j - 1] * pow(x, jPairedIn(i, j, basePairs));
-    Z[j][i] += Z[j - 1][i];
+    
+    #ifdef STRUCTURE_COUNT
+      Z[j][i] += Z[j - 1][i];
+    #endif
     
     for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
       // (k, j) is the rightmost base pair in (i, j).
       if (BP(k, j, sequence)) {
         if (k == i) {
-          Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(x, jPairedIn(i, j, basePairs));
-          Z[j][i] += ZB[j][k];
+          Z[i][j] += ZB[k][j] * pow(x, jPairedIn(i, j, basePairs));
+          // Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(x, jPairedIn(i, j, basePairs));
+          
+          #ifdef STRUCTURE_COUNT
+            Z[j][i] += ZB[j][k];
+          #endif
         } else {
-          Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
-          Z[j][i] += Z[k - 1][i] * ZB[j][k];
+          Z[i][j] += Z[i][k - 1] * ZB[k][j] * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
+          // Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
+          
+          #ifdef STRUCTURE_COUNT
+            Z[j][i] += Z[k - 1][i] * ZB[j][k];
+          #endif          
         }
       }
     }
@@ -126,8 +138,11 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   int k, l;
   
   // In a hairpin, (i + 1, j - 1) all unpaired.
-  ZB[i][j] += exp(-HP_Energy(i, j, S0, sequence + 1) / kT) * pow(x, basePairCounts[i][j] + jPairedTo(i, j, basePairs));
-  ZB[j][i] += 1;
+  ZB[i][j] += pow(x, basePairCounts[i][j] + jPairedTo(i, j, basePairs));
+  // ZB[i][j] += exp(-HP_Energy(i, j, S0, sequence + 1) / kT) * pow(x, basePairCounts[i][j] + jPairedTo(i, j, basePairs));
+  #ifdef STRUCTURE_COUNT
+    ZB[j][i] += 1;
+  #endif
   
   // Interior loop / bulge / stack / multiloop.
   for (k = i + 1; k <= j - MIN_PAIR_DIST - 1; ++k) {
@@ -135,13 +150,19 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
         // are all unpaired.
-        ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[k][l] + jPairedTo(i, j, basePairs));
-        ZB[j][i] += ZB[l][k];
+        ZB[i][j] += ZB[k][l] * pow(x, basePairCounts[i][j] - basePairCounts[k][l] + jPairedTo(i, j, basePairs));
+        // ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[k][l] + jPairedTo(i, j, basePairs));
+        #ifdef STRUCTURE_COUNT
+          ZB[j][i] += ZB[l][k];
+        #endif
           
         // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
         // there is at least one hairpin between (i + 1, k - 1).
-        ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1] * pow(x, basePairCounts[i][j] - basePairCounts[i + 1][k - 1] - basePairCounts[k][l] + jPairedTo(i, j, basePairs));
-        ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
+        ZB[i][j] += ZB[k][l] * ZM[i + 1][k - 1] * pow(x, basePairCounts[i][j] - basePairCounts[i + 1][k - 1] - basePairCounts[k][l] + jPairedTo(i, j, basePairs));
+        // ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZB[k][l] * ZM[i + 1][k - 1] * pow(x, basePairCounts[i][j] - basePairCounts[i + 1][k - 1] - basePairCounts[k][l] + jPairedTo(i, j, basePairs));
+        #ifdef STRUCTURE_COUNT
+          ZB[j][i] += ZB[l][k] * ZM[k - 1][i + 1];
+        #endif
       }
     }
   }
@@ -150,19 +171,28 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
 void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, dcomplex **ZB, dcomplex **ZM) { 
   int k;
   
-  ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(x, jPairedIn(i, j, basePairs));
-  ZM[j][i] += ZM[j - 1][i];
+  ZM[i][j] += ZM[i][j - 1] * pow(x, jPairedIn(i, j, basePairs));
+  // ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(x, jPairedIn(i, j, basePairs));
+  #ifdef STRUCTURE_COUNT
+    ZM[j][i] += ZM[j - 1][i];
+  #endif
   
   for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) {
     if (BP(k, j, sequence)) {
       // Only one stem.
-      ZM[i][j] += ZB[k][j] * exp(-ML_base * (k - i) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[k][j]);
-      ZM[j][i] += ZB[j][k];
+      ZM[i][j] += ZB[k][j] * pow(x, basePairCounts[i][j] - basePairCounts[k][j]);
+      // ZM[i][j] += ZB[k][j] * exp(-ML_base * (k - i) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[k][j]);
+      #ifdef STRUCTURE_COUNT
+        ZM[j][i] += ZB[j][k];
+      #endif
       
       // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
       if (k > i) {
-        ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * exp(-ML_base / kT) * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
-        ZM[j][i] += ZB[j][k] * ZM[k - 1][i];
+        ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
+        // ZM[i][j] += ZB[k][j] * ZM[i][k - 1] * exp(-ML_base / kT) * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
+        #ifdef STRUCTURE_COUNT
+          ZM[j][i] += ZB[j][k] * ZM[k - 1][i];
+        #endif
       }
     }
   }
@@ -172,7 +202,7 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   int i, j;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << rootsOfUnity[i][0].real() << ", " << rootsOfUnity[i][0].imag() << " -> " << rootsOfUnity[i][1].real() << ", " << rootsOfUnity[i][1].imag() << std::endl;
+    std::cout << "(" << rootsOfUnity[i][0].real() << ", i * " << rootsOfUnity[i][0].imag() << ") -> (" << rootsOfUnity[i][1].real() << ", i * " << rootsOfUnity[i][1].imag() << ")" << std::endl;
   }
   
   // Might need to free this memory.
@@ -182,19 +212,26 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   
   for (i = 0; i <= seqlen; ++i) {
     for (j = 0; j <= seqlen; ++j) {
-      A(i, j).r = pow(rootsOfUnity[i][1], j).real();
-      A(i, j).i = pow(rootsOfUnity[i][1], j).imag();
+      // std::cout << j << std::endl;
+      // std::cout << pow(rootsOfUnity[i][0], j) << std::endl;
+      
+      A(i, j).r = pow(rootsOfUnity[i][0], j).real();
+      A(i, j).i = pow(rootsOfUnity[i][0], j).imag();
     }
     
-    B(i).r = rootsOfUnity[i][0].real();
-    B(i).i = rootsOfUnity[i][0].imag();
+    B(i).r = rootsOfUnity[i][1].real();
+    B(i).i = rootsOfUnity[i][1].imag();
   }
+
+  // std::cout << A << std::endl << std::endl;
+  // std::cout << X << std::endl << std::endl;
+  // std::cout << B << std::endl << std::endl;
   
   LaLinearSolveIP(A, X, B);
   
-  std::cout << A << std::endl;
-  std::cout << X << std::endl;
-  std::cout << B << std::endl;
+  // std::cout << A << std::endl << std::endl;
+  // std::cout << X << std::endl << std::endl;
+  // std::cout << B << std::endl << std::endl;
 }
 
 int jPairedTo(int i, int j, int *basePairs) {
