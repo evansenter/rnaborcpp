@@ -6,8 +6,8 @@
 // 
 // GGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCC
 // 11843733310154873 (according to webserver)
-// 11843733273181228 (according to Zuker [with MAX_INTERIOR_DIST 30])
-// 11843733310160116 (according to Zuker [without MAX_INTERIOR_DIST])
+// 11540343231278612 (according to Zuker [with MAX_INTERIOR_DIST 30])
+// 11540343268028146 (according to Zuker [without MAX_INTERIOR_DIST])
 // 11843733310160115 (according to Nussinov)
 
 #include <stdio.h>
@@ -30,8 +30,8 @@
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define ZERO_C dcomplex(0, 0)
-#define ONE_C  dcomplex(1, 0)
+#define ZERO_C dcomplex(0.0, 0.0)
+#define ONE_C  dcomplex(1.0, 0.0)
 #define SET_Z(i, j, value) \
 Z[i][j] = value; \
 Z[j][i] = value;
@@ -69,9 +69,15 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     // Flush the matrices.
     for (i = 0; i <= seqlen; ++i) {
       for (j = 0; j <= seqlen; ++j) {
-        Z[i][j]  = i >= 1 && j - i <= MIN_PAIR_DIST ? ONE_C : ZERO_C;
+        Z[i][j]  = ZERO_C;
         ZB[i][j] = ZERO_C;
         ZM[i][j] = ZERO_C;
+      }
+    }
+    
+    for (d = 0; d <= MIN_PAIR_DIST; ++d) {
+      for (i = 1; i <= seqlen - d; ++i) {
+        SET_Z(i, i + d, ONE_C)
       }
     }
     
@@ -201,9 +207,13 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
 void solveLinearSystem(dcomplex **rootsOfUnity) {
   int i, j;
   
+  std::cout << "Roots:" << std::endl;
+  
   for (i = 0; i <= seqlen; ++i) {
     std::cout << "(" << rootsOfUnity[i][0].real() << ", i * " << rootsOfUnity[i][0].imag() << ") -> (" << rootsOfUnity[i][1].real() << ", i * " << rootsOfUnity[i][1].imag() << ")" << std::endl;
   }
+  
+  std::cout << std::endl << std::endl;
   
   // Might need to free this memory.
   LaGenMatComplex A(seqlen + 1, seqlen + 1);
@@ -223,15 +233,17 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
     B(i).i = rootsOfUnity[i][1].imag();
   }
 
-  // std::cout << A << std::endl << std::endl;
-  // std::cout << X << std::endl << std::endl;
-  // std::cout << B << std::endl << std::endl;
+  std::cout << "Before:" << std::endl;
+  std::cout << A << std::endl << std::endl << std::endl;
+  std::cout << X << std::endl << std::endl << std::endl;
+  std::cout << B << std::endl << std::endl << std::endl;
   
-  LaLinearSolveIP(A, X, B);
+  LaLinearSolve(A, X, B);
   
-  // std::cout << A << std::endl << std::endl;
-  std::cout << X << std::endl << std::endl;
-  // std::cout << B << std::endl << std::endl;
+  std::cout << "After:" << std::endl;
+  std::cout << A << std::endl << std::endl << std::endl;
+  std::cout << X << std::endl << std::endl << std::endl;
+  std::cout << B << std::endl << std::endl << std::endl;
 }
 
 int jPairedTo(int i, int j, int *basePairs) {
