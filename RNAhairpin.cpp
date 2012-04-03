@@ -74,8 +74,8 @@ int main(int argc, char *argv[]){
     make_pair_matrix();//needed for pair matching
     kT = (temperature+K0)*GASCONST/1000.0;
     //printf("%.15f\n",kT);
-    ML_base=(double)P->MLbase/100;
-    ML_close=(double)P->MLclosing/100;
+    ML_base=0;//(double)P->MLbase/100;
+    ML_close=0;//(double)P->MLclosing/100;
     HPMAX=Allocate2DMatrix( seqlen+1, seqlen+1);
     for(i=1;i<seqlen+1;++i)
       {for (j=1;j<seqlen+1;++j)

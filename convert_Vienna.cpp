@@ -17,7 +17,11 @@ void Initialize_Params(){
   P = scale_parameters();//from params.c, gets our parameters, for a given temp
 }
 
+// ML_base and ML_close are set to 0 as well.
+
 double HP_Energy(int i, int j, short *S0, char* sequence){
+  return 0;
+  
   int type, energy_int;
 
   type=pair[S0[i]][S0[j]];
@@ -25,6 +29,8 @@ double HP_Energy(int i, int j, short *S0, char* sequence){
   return ((double) energy_int)/100.;
 }
 double IL_Energy(int i, int j, int ip, int jp, short *S0){
+  return 0;
+  
   int type, type2, energy_int, k, l;
 
   type=pair[S0[i]][S0[j]];
@@ -34,12 +40,16 @@ double IL_Energy(int i, int j, int ip, int jp, short *S0){
   return ((double) energy_int)/100.;
 }  
 double AU_Penalty(int i, int j, short *S0){
+  return 0;
+  
   int type, energy_int;
   type=pair[S0[i]][S0[j]];
   energy_int=P->MLintern[type]-P->MLintern[1]; /* 0 or AU penalty */
   return (double) energy_int/100.;
 }
 double MLbasepairAndAUpenalty(int i, int j, short *S0){
+  return 0;
+  
   int type, energy_int;
   int k;
   type=pair[S0[i]][S0[j]];
