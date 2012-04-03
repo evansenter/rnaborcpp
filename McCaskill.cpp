@@ -31,7 +31,6 @@
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define ZERO_C dcomplex(0.0, 0.0)
-#define ONE_C  dcomplex(1.0, 0.0)
 #define SET_Z(i, j, value) \
 Z[i][j] = value; \
 Z[j][i] = value;
@@ -64,8 +63,10 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   basePairs      = getBasePairList(structure);
   basePairCounts = fillBasePairCounts(basePairs, seqlen);
   
-  // Start main recursions.
-  for (root = 0; root <= seqlen; ++root) {
+  // Start main recursions (root < seqlen / 2 + 1 is an optimization for roots of unity).
+  for (root = 0; root < seqlen / 2 + 1; ++root) {
+    std::cout << '.' << std::flush;
+    
     // Flush the matrices.
     for (i = 0; i <= seqlen; ++i) {
       for (j = 0; j <= seqlen; ++j) {
@@ -77,8 +78,8 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     
     for (d = 0; d <= MIN_PAIR_DIST; ++d) {
       for (i = 1; i <= seqlen - d; ++i) {
-        // SET_Z(i, i + d, ONE_C)
-        SET_Z(i, i + d, dcomplex(1.0 / (d + 1), 0))
+        SET_Z(i, i + d, dcomplex(1, 0))
+        // SET_Z(i, i + d, dcomplex(1.0 / (d + 1), 0))
       }
     }
     
@@ -94,14 +95,14 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
         // 
         // solveZ(i, j, rootsOfUnity[root][0], sequence, basePairs, basePairCounts, Z, ZB);
         
-        Z[i][j] = Z[i][j - 1] * pow(rootsOfUnity[root][0], jPairedIn(i, j, basePairs)) / dcomplex(2.5, 0);
+        Z[i][j] = Z[i][j - 1] * pow(rootsOfUnity[root][0], jPairedIn(i, j, basePairs));// / dcomplex(2.5, 0);
         
         for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
           if (BP(k, j, sequence)) {
             if (k == i) {
-              Z[i][j] += Z[k + 1][j - 1] * pow(rootsOfUnity[root][0], basePairCounts[i][j] - basePairCounts[k + 1][j - 1] + jPairedTo(k, j, basePairs)) / dcomplex(6.25, 0);
+              Z[i][j] += Z[k + 1][j - 1] * pow(rootsOfUnity[root][0], basePairCounts[i][j] - basePairCounts[k + 1][j - 1] + jPairedTo(k, j, basePairs));// / dcomplex(6.25, 0);
             } else {
-              Z[i][j] += Z[i][k - 1] * Z[k + 1][j - 1] * pow(rootsOfUnity[root][0], basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k + 1][j - 1] + jPairedTo(k, j, basePairs)) / dcomplex(6.25, 0);
+              Z[i][j] += Z[i][k - 1] * Z[k + 1][j - 1] * pow(rootsOfUnity[root][0], basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k + 1][j - 1] + jPairedTo(k, j, basePairs));// / dcomplex(6.25, 0);
             }
           }
         }
@@ -110,6 +111,13 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     
     rootsOfUnity[root][1] = Z[1][seqlen];
   }
+  
+  // Optimization leveraging complementarity of roots of unity.
+  for (i = root - 1; root <= seqlen && i > 0; ++root, --i) {
+    rootsOfUnity[root][1] = dcomplex(rootsOfUnity[i][1].real(), -rootsOfUnity[i][1].imag());
+  }
+  
+  std::cout << std::endl;
   
   solveLinearSystem(rootsOfUnity);
   
@@ -248,7 +256,7 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   // std::cout << X << std::endl << std::endl << std::endl;
   // std::cout << B << std::endl << std::endl << std::endl;
   
-  LaLinearSolve(A, X, B);
+  LaLinearSolveIP(A, X, B);
   
   std::cout << "Solution:" << std::endl;
   
