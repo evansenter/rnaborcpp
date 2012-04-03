@@ -38,7 +38,7 @@ Z[j][i] = value;
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
-  int root, i, j, d, *basePairs, **basePairCounts;
+  int root, i, j, k, d, *basePairs, **basePairCounts;
   char structure[seqlen];
   
   dcomplex **Z            = new dcomplex*[seqlen + 1];
@@ -46,6 +46,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   dcomplex **ZM           = new dcomplex*[seqlen + 1];
   dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
   
+  // Roots of unity hack.
   // Matrix allocation.
   for (i = 0; i <= seqlen; ++i) {
     Z[i]               = new dcomplex[seqlen + 1];
@@ -58,7 +59,6 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // This will need to be parameterized.
   for (i = 0; i < seqlen; ++i) {
     structure[i] = '.';
-    structure[i] = seqlen % 2 != 0 && i + 1 == seqlen ? '.' : (i % 2 == 0 ? '(' : ')');
   }
   
   basePairs      = getBasePairList(structure);
@@ -77,7 +77,8 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     
     for (d = 0; d <= MIN_PAIR_DIST; ++d) {
       for (i = 1; i <= seqlen - d; ++i) {
-        SET_Z(i, i + d, ONE_C)
+        // SET_Z(i, i + d, ONE_C)
+        SET_Z(i, i + d, dcomplex(1.0 / (d + 1), 0))
       }
     }
     
@@ -85,13 +86,25 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       for (i = 1; i <= seqlen - d; ++i) {
         j = i + d;
       
-        if (BP(i, j, sequence)) {
-          solveZB(i, j, rootsOfUnity[root][0], sequence, basePairs, basePairCounts, ZB, ZM);
-        }
+        // if (BP(i, j, sequence)) {
+        //   solveZB(i, j, rootsOfUnity[root][0], sequence, basePairs, basePairCounts, ZB, ZM);
+        // }
+        // 
+        // solveZM(i, j, rootsOfUnity[root][0], sequence, basePairs, basePairCounts, ZB, ZM);
+        // 
+        // solveZ(i, j, rootsOfUnity[root][0], sequence, basePairs, basePairCounts, Z, ZB);
         
-        solveZM(i, j, rootsOfUnity[root][0], sequence, basePairs, basePairCounts, ZB, ZM);
-
-        solveZ(i, j, rootsOfUnity[root][0], sequence, basePairs, basePairCounts, Z, ZB);
+        Z[i][j] = Z[i][j - 1] * pow(rootsOfUnity[root][0], jPairedIn(i, j, basePairs)) / dcomplex(2.5, 0);
+        
+        for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
+          if (BP(k, j, sequence)) {
+            if (k == i) {
+              Z[i][j] += Z[k + 1][j - 1] * pow(rootsOfUnity[root][0], basePairCounts[i][j] - basePairCounts[k + 1][j - 1] + jPairedTo(k, j, basePairs)) / dcomplex(6.25, 0);
+            } else {
+              Z[i][j] += Z[i][k - 1] * Z[k + 1][j - 1] * pow(rootsOfUnity[root][0], basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k + 1][j - 1] + jPairedTo(k, j, basePairs)) / dcomplex(6.25, 0);
+            }
+          }
+        }
       }
     }
     
@@ -210,7 +223,7 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   std::cout << "Roots:" << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << "(" << rootsOfUnity[i][0].real() << ", i * " << rootsOfUnity[i][0].imag() << ") -> (" << rootsOfUnity[i][1].real() << ", i * " << rootsOfUnity[i][1].imag() << ")" << std::endl;
+    std::cout << i << ": (" << rootsOfUnity[i][0].real() << ", i * " << rootsOfUnity[i][0].imag() << ") -> (" << rootsOfUnity[i][1].real() << ", i * " << rootsOfUnity[i][1].imag() << ")" << std::endl;
   }
   
   std::cout << std::endl << std::endl;
@@ -222,9 +235,6 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   
   for (i = 0; i <= seqlen; ++i) {
     for (j = 0; j <= seqlen; ++j) {
-      // std::cout << j << std::endl;
-      // std::cout << pow(rootsOfUnity[i][0], j) << std::endl;
-      
       A(i, j).r = pow(rootsOfUnity[i][0], j).real();
       A(i, j).i = pow(rootsOfUnity[i][0], j).imag();
     }
@@ -233,17 +243,21 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
     B(i).i = rootsOfUnity[i][1].imag();
   }
 
-  std::cout << "Before:" << std::endl;
-  std::cout << A << std::endl << std::endl << std::endl;
-  std::cout << X << std::endl << std::endl << std::endl;
-  std::cout << B << std::endl << std::endl << std::endl;
+  // std::cout << "Before:" << std::endl;
+  // std::cout << A << std::endl << std::endl << std::endl;
+  // std::cout << X << std::endl << std::endl << std::endl;
+  // std::cout << B << std::endl << std::endl << std::endl;
   
   LaLinearSolve(A, X, B);
   
-  std::cout << "After:" << std::endl;
-  std::cout << A << std::endl << std::endl << std::endl;
-  std::cout << X << std::endl << std::endl << std::endl;
-  std::cout << B << std::endl << std::endl << std::endl;
+  std::cout << "Solution:" << std::endl;
+  
+  for (i = 0; i <= seqlen; ++i) {
+    std::cout << i << ": " << X(i) << std::endl;
+  }
+  // std::cout << A << std::endl << std::endl << std::endl;
+  // std::cout << X << std::endl << std::endl << std::endl;
+  // std::cout << B << std::endl << std::endl << std::endl;
 }
 
 int jPairedTo(int i, int j, int *basePairs) {
