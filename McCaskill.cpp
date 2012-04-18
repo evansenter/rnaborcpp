@@ -80,8 +80,8 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       for (i = 1; i <= seqlen - d; ++i) {
         Z[i][i + d] = dcomplex(1 / pow(SCALING_FACTOR, d + 1), 0);
           
-        if (STRUCTURE_COUNT && d > 0) {
-          Z[i + d][i] = ONE_C;
+        if (STRUCTURE_COUNT) {
+          Z[i + d][i - 1] = ONE_C;
         }
       }
     }
@@ -129,8 +129,7 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
   Z[i][j] += Z[i][j - 1] * pow(x, jPairedIn(i, j, basePairs)) / dcomplex(pow(SCALING_FACTOR, 1), 0);
     
   if (STRUCTURE_COUNT) {
-    // Conditional if j - 1 == i
-    Z[j][i] += (j - 1 == i ? ONE_C : Z[j - 1][i]);
+    Z[j][i - 1] += Z[j - 1][i - 1];
   }
     
   for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) { 
@@ -140,13 +139,13 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
         Z[i][j] += ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(x, jPairedIn(i, j, basePairs));
           
         if (STRUCTURE_COUNT) {
-          Z[j][i] += ZB[j][k];
+          Z[j][i - 1] += ZB[j][k - 1];
         }
       } else {
         Z[i][j] += Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
           
         if (STRUCTURE_COUNT) {
-          Z[j][i] += Z[k - 1][i] * ZB[j][k];
+          Z[j][i - 1] += Z[k - 1][i - 1] * ZB[j][k - 1];
         }
       }
     }
@@ -161,7 +160,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   ZB[i][j] += exp(-HP_Energy(i, j, S0, sequence + 1) / kT) * pow(x, basePairCounts[i][j] + jPairedTo(i, j, basePairs));
   
   if (STRUCTURE_COUNT) {
-    ZB[j][i] += 1;
+    ZB[j][i - 1] += 1;
   }
   
   // Interior loop / bulge / stack / multiloop.
@@ -173,7 +172,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
         ZB[i][j] += ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[k][l] + jPairedTo(i, j, basePairs)) / dcomplex(pow(SCALING_FACTOR, j - l + k - i), 0);
         
         if (STRUCTURE_COUNT) {
-          ZB[j][i] += ZB[l][k];
+          ZB[j][i - 1] += ZB[l][k - 1];
         }
         
         if (k > i + MIN_PAIR_DIST + 2) {
@@ -182,7 +181,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
           ZB[i][j] += exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZM[i + 1][k - 1] * ZB[k][l] * pow(x, basePairCounts[i][j] - basePairCounts[i + 1][k - 1] - basePairCounts[k][l] + jPairedTo(i, j, basePairs)) / dcomplex(pow(SCALING_FACTOR, j - l + 1), 0);
           
           if (STRUCTURE_COUNT) {
-            ZB[j][i] += ZM[k - 1][i + 1] * ZB[l][k];
+            ZB[j][i - 1] += ZM[k - 1][i + 1 - 1] * ZB[l][k - 1];
           }
         }
       }
@@ -197,7 +196,7 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   // ZM[i][j] += ZM[i][j - 1] * exp(-1 / kT) * pow(x, jPairedIn(i, j, basePairs)) / dcomplex(pow(SCALING_FACTOR, 1), 0);
   
   if (STRUCTURE_COUNT) {
-    ZM[j][i] += ZM[j - 1][i];
+    ZM[j][i - 1] += ZM[j - 1 - 1][i - 1];
   }
   
   for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) {
@@ -206,7 +205,7 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
       ZM[i][j] += ZB[k][j] * exp(-ML_base * (k - i) / kT) * pow(x, basePairCounts[i][j] - basePairCounts[k][j]) / dcomplex(pow(SCALING_FACTOR, k - i), 0);
       
       if (STRUCTURE_COUNT) {
-        ZM[j][i] += ZB[j][k];
+        ZM[j][i - 1] += ZB[j][k - 1];
       }
       
       // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
@@ -214,7 +213,7 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
         ZM[i][j] += ZM[i][k - 1] * ZB[k][j] * exp(-ML_base / kT) * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
         
         if (STRUCTURE_COUNT) {
-          ZM[j][i] += ZM[k - 1][i] * ZB[j][k];
+          ZM[j][i - 1] += ZM[k - 1][i - 1] * ZB[j][k - 1];
         }
       }
     }
