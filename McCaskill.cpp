@@ -87,7 +87,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     }
     
     if (DEBUG && root == 0) {
-      printMatrix(Z, (char *)"Initialized matrix (1-indexed):", 1, seqlen, 1, seqlen);
+      printMatrix(Z, (char *)"Initialized matrix (1-indexed):", 0, seqlen, 0, seqlen);
     }
     
     for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
@@ -107,7 +107,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     rootsOfUnity[root][1] = Z[1][seqlen];
     
     if (DEBUG && root == 0) {
-      printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 1, seqlen, 1, seqlen);
+      printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 0, seqlen, 0, seqlen);
     }
   }
   
