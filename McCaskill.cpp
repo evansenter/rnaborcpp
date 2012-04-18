@@ -26,7 +26,7 @@
 #include "misc.h"
 #include "McCaskill.h"
 #include <lapackpp.h>
-#define STRUCTURE_COUNT 0
+#define STRUCTURE_COUNT 1
 #define SCALING_FACTOR 2.5
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
