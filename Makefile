@@ -1,5 +1,5 @@
-RNAhairpin: convert_Vienna.o energy_par.o fold.o fold_vars.o misc.o pair_mat.o params.o ParCal.o RNAhairpin.o utils.o McCaskill.o
-	g++ -L /usr/local/lib -llapackpp -o RNAhairpin -lm convert_Vienna.o energy_par.o fold.o fold_vars.o ParCal.o McCaskill.o misc.o pair_mat.o params.o RNAhairpin.o utils.o
+RNAbor: convert_Vienna.o energy_par.o fold.o fold_vars.o misc.o pair_mat.o params.o ParCal.o RNAhairpin.o utils.o McCaskill.o
+	g++ -L /usr/local/lib -llapackpp -o RNAbor -lm convert_Vienna.o energy_par.o fold.o fold_vars.o ParCal.o McCaskill.o misc.o pair_mat.o params.o RNAhairpin.o utils.o
 
 convert_Vienna.o: convert_Vienna.cpp convert_Vienna.h
 	g++ -c convert_Vienna.cpp
@@ -34,10 +34,10 @@ RNAhairpin.o: RNAhairpin.cpp RNAhairpin.h
 utils.o: utils.cpp utils.h
 	g++ -c utils.cpp
 
-install: RNAhairpin
-	cp RNAhairpin /usr/local/bin
-	cp RNAhairpin.man /usr/local/man/man1/RNAhairpin.1
+install: RNAbor
+	cp RNAbor /usr/local/bin
+	cp RNAbor.man /usr/local/man/man1/RNAbor.1
 	
 clean:
 	rm -fr *.o
-	rm -f ./RNAhairpin
+	rm -f ./RNAbor
