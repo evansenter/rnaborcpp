@@ -14,3 +14,4 @@ int jPairedTo(int i, int j, int *basePairs);
 int* getBasePairList(char *structure);
 int numberOfBasePairs(int i, int j, int *basePairs);
 int** fillBasePairCounts(int *basePairs, int n);
+void printMatrix(dcomplex **matrix, char *title, int iStart, int iStop, int jStart, int jStop);
