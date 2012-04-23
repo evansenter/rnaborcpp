@@ -184,7 +184,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
           ZB[j][i] += ZB[l][k];
         }
         
-        // Different.
+        // Different: (1) OLD vs. (k > i + MIN_PAIR_DIST + 2) NEW.
         if (k > i + MIN_PAIR_DIST + 2) {
           // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
           // there is at least one hairpin between (i + 1, k - 1).
@@ -219,7 +219,7 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
       }
       
       // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
-      // Different.
+      // Different: (k > i) OLD vs. (k > i + MIN_PAIR_DIST + 2) NEW.
       if (k > i) {// + MIN_PAIR_DIST + 2) {
         ZM[i][j] += ZM[i][k - 1] * ZB[k][j] * exp(-ML_base / kT) * pow(x, basePairCounts[i][j] - basePairCounts[i][k - 1] - basePairCounts[k][j]);
         
