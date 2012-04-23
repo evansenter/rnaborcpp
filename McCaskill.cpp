@@ -33,7 +33,7 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define ZERO_C dcomplex(0.0, 0.0)
 #define ONE_C dcomplex(1.0, 0.0)
-#define DEBUG 1
+#define DEBUG 0
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
