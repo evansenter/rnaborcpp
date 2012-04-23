@@ -27,13 +27,13 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 2.5
+#define SCALING_FACTOR 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define ZERO_C dcomplex(0.0, 0.0)
 #define ONE_C dcomplex(1.0, 0.0)
-#define DEBUG 0
+#define DEBUG 1
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
@@ -117,6 +117,12 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   }
   
   std::cout << std::endl;
+  
+  if (DEBUG) {
+    printf("Z[seqlen][0]: %.0f\n", Z[seqlen][0].real());
+    printf("Z[seqlen][1]: %.0f\n", Z[seqlen][1].real());
+    printf("Z[1][seqlen]: %.0f\n", Z[1][seqlen].real());
+  }
   
   solveLinearSystem(rootsOfUnity);
   
