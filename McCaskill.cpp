@@ -1,3 +1,6 @@
+// >B.japonicum.5 AJ003064.1/2430-2312
+// CGCCGCCGCAGGGCGGCUCUCCGGGCGCCUGACGGGCUCGGCGAAUCCAGAGACGGGCACCGGUCGUGUCCGGUGCCGCUCGUAACCAUUUUGCUCCGUGGAGGAUCUGGCUAUGCGCA
+// 
 // GGGGGCCCCCGGGGGCCCCCGGGGGCCCCC
 // 19049760
 // 
@@ -34,6 +37,7 @@
 #define ZERO_C dcomplex(0.0, 0.0)
 #define ONE_C dcomplex(1.0, 0.0)
 #define DEBUG 1
+#define PRINT_MATRICES 0
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
@@ -89,7 +93,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       }
     }
     
-    if (DEBUG && root == 0) {
+    if (PRINT_MATRICES && root == 0) {
       printMatrix(Z, (char *)"Initialized matrix (1-indexed):", 0, seqlen, 0, seqlen);
     }
     
@@ -109,14 +113,14 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     
     rootsOfUnity[root][1] = Z[1][seqlen];
     
-    if (DEBUG && root == 0) {
+    if (PRINT_MATRICES && root == 0) {
       printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 0, seqlen, 0, seqlen);
-      
-      if (DEBUG) {
-        printf("Z[seqlen][1]: %f\n", Z[seqlen][1].real());
-        printf("Z[1][seqlen]: %f\n\n", Z[1][seqlen].real());
-      }
     }
+  }
+  
+  if (DEBUG) {
+    printf("Z[seqlen][1]: %f\n", Z[seqlen][1].real());
+    printf("Z[1][seqlen]: %f\n\n", Z[1][seqlen].real());
   }
   
   // Optimization leveraging complementarity of roots of unity.
