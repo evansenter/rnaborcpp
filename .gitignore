@@ -1,3 +1,4 @@
 *.o
+*.ps
 RNAbor
 .DS_Store
