@@ -45,7 +45,6 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   dcomplex **ZM           = new dcomplex*[seqlen + 1];
   dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
   
-  // Roots of unity hack.
   // Matrix allocation.
   for (i = 0; i <= seqlen; ++i) {
     Z[i]               = new dcomplex[seqlen + 1];
