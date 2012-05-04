@@ -30,7 +30,7 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 1
+#define SCALING_FACTOR 3
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -66,8 +66,8 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   basePairs      = getBasePairList(structure);
   basePairCounts = fillBasePairCounts(basePairs, seqlen);
   
-  // Start main recursions (root < seqlen / 2 + 1 is an optimization for roots of unity).
-  for (root = 0; root < seqlen / 2 + 1; ++root) {
+  // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
+  for (root = 0; root <= round(seqlen / 2.0); ++root) {
     std::cout << '.' << std::flush;
     
     // Flush the matrices.
@@ -93,7 +93,9 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       }
     }
     
-    if (PRINT_MATRICES && root == 0) {
+    if (PRINT_MATRICES) {
+      std::cout << "SOLUTIONS FOR ROOT " << root << ": " << rootsOfUnity[root][0] << std::endl;
+      
       printMatrix(Z, (char *)"Initialized matrix (1-indexed):", 0, seqlen, 0, seqlen);
     }
     
@@ -113,18 +115,24 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     
     rootsOfUnity[root][1] = Z[1][seqlen];
     
-    if (PRINT_MATRICES && root == 0) {
+    if (PRINT_MATRICES) {
       printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 0, seqlen, 0, seqlen);
+    }
+    
+    if (DEBUG) {
+      printf("Z[1][seqlen]: %f\n\n", Z[1][seqlen].real());
+      printf("\nZ[seqlen][1]: %f\n", Z[seqlen][1].real());
     }
   }
   
-  if (DEBUG) {
-    printf("Z[seqlen][1]: %f\n", Z[seqlen][1].real());
-    printf("Z[1][seqlen]: %f\n\n", Z[1][seqlen].real());
+  // Optimization leveraging complementarity of roots of unity.
+  if (seqlen % 2) {
+    i = root - 2;
+  } else {
+    i = root - 1;
   }
   
-  // Optimization leveraging complementarity of roots of unity.
-  for (i = root - 1; root <= seqlen && i > 0; ++root, --i) {
+  for (; root <= seqlen && i > 0; --i, ++root) {
     rootsOfUnity[root][1] = dcomplex(rootsOfUnity[i][1].real(), -rootsOfUnity[i][1].imag());
   }
   
