@@ -30,7 +30,7 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 3
+#define SCALING_FACTOR 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -279,11 +279,18 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   }
   
   std::cout << "Solution:" << std::endl;
-  std::cout << "Sum: " << sum << std::endl;
+  std::cout << "Sum (normalized): " << sum << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
     std::cout << i << ": " << dcomplex(X(i).r, X(i).i) / sum << std::endl;
   }
+  
+  std::cout << "\n\nSum: " << sum << std::endl;
+  
+  for (i = 0; i <= seqlen; ++i) {
+    std::cout << i << ": " << dcomplex(X(i).r, X(i).i) << std::endl;
+  }
+  
   // std::cout << A << std::endl << std::endl << std::endl;
   // std::cout << X << std::endl << std::endl << std::endl;
   // std::cout << B << std::endl << std::endl << std::endl;
