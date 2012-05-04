@@ -36,7 +36,7 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define ZERO_C dcomplex(0.0, 0.0)
 #define ONE_C dcomplex(1.0, 0.0)
-#define DEBUG 0
+#define DEBUG 1
 #define PRINT_MATRICES 0
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
@@ -68,8 +68,6 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   
   // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
   for (root = 0; root <= round(seqlen / 2.0); ++root) {
-    std::cout << '.' << std::flush;
-    
     // Flush the matrices.
     for (i = 0; i <= seqlen; ++i) {
       for (j = 0; j <= seqlen; ++j) {
@@ -119,10 +117,12 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 0, seqlen, 0, seqlen);
     }
     
-    if (DEBUG) {
-      printf("Z[1][seqlen]: %f\n\n", Z[1][seqlen].real());
-      printf("\nZ[seqlen][1]: %f\n", Z[seqlen][1].real());
+    if (DEBUG && root == 0) {
+      printf("Z[1][seqlen]: %f\n", Z[1][seqlen].real());
+      printf("Z[seqlen][1]: %f\n", Z[seqlen][1].real());
     }
+    
+    std::cout << '.' << std::flush;
   }
   
   // Optimization leveraging complementarity of roots of unity.
@@ -266,11 +266,6 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
     B(i).r = rootsOfUnity[i][1].real();
     B(i).i = rootsOfUnity[i][1].imag();
   }
-
-  // std::cout << "Before:" << std::endl;
-  // std::cout << A << std::endl << std::endl << std::endl;
-  // std::cout << X << std::endl << std::endl << std::endl;
-  // std::cout << B << std::endl << std::endl << std::endl;
   
   LaLinearSolveIP(A, X, B);
 
@@ -290,10 +285,6 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   for (i = 0; i <= seqlen; ++i) {
     std::cout << i << ": " << dcomplex(X(i).r, X(i).i) << std::endl;
   }
-  
-  // std::cout << A << std::endl << std::endl << std::endl;
-  // std::cout << X << std::endl << std::endl << std::endl;
-  // std::cout << B << std::endl << std::endl << std::endl;
 }
 
 int jPairedTo(int i, int j, int *basePairs) {
