@@ -30,7 +30,7 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 1
+#define SCALING_FACTOR 2.75
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -44,6 +44,8 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
   int root, i, j, k, d, *basePairs, **bpCounts;
   char structure[seqlen];
+  
+  std::cout.precision(15);
   
   dcomplex **Z            = new dcomplex*[seqlen + 1];
   dcomplex **ZB           = new dcomplex*[seqlen + 1];
@@ -66,8 +68,6 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   
   basePairs = getBasePairList(structure);
   bpCounts  = fillBasePairCounts(basePairs, seqlen);
-  
-  std::cout << "Sequence length: " << seqlen << std::endl;
   
   // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
   for (root = 0; root <= round(seqlen / 2.0); ++root) {
@@ -119,7 +119,11 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     }
     
     if (DEBUG && root == 0) {
-      printf("Z[1][%d]: %d\n", seqlen, (int)Z[1][seqlen].real());
+      printf("c:        %f\n", (double)SCALING_FACTOR);
+      printf("n:        %d\n", seqlen);
+      printf("c^(n-1):  %f\n", SCALE(seqlen - 1).real());
+      printf("Q[1][%d]: %f\n", seqlen, Z[1][seqlen].real());
+      printf("Z[1][%d]: %f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1).real());
       printf("Z[%d][1]: %d\n", seqlen, (int)Z[seqlen][1].real());
     }
     
@@ -244,7 +248,8 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
 
 void solveLinearSystem(dcomplex **rootsOfUnity) {
   int i, j;
-  dcomplex sum = ZERO_C, poweredRoot;
+  dcomplex poweredRoot;
+  double sum;
   
   if (DEBUG) {
     printMatrix(rootsOfUnity, (char *)"Roots and solutions:", 0, seqlen, 0, 1);
@@ -270,20 +275,20 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   LaLinearSolveIP(A, X, B);
 
   for (i = 0; i <= seqlen; ++i) {
-    sum = sum + dcomplex(X(i).r, X(i).i);
+    sum = sum + X(i).r;
   }
   
   std::cout << "Solution:" << std::endl;
   std::cout << "Sum (normalized): " << sum << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << dcomplex(X(i).r, X(i).i) / sum << std::endl;
+    std::cout << i << ": " << X(i).r / sum << std::endl;
   }
   
   std::cout << "\n\nSum: " << sum << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << dcomplex(X(i).r, X(i).i) * SCALE(seqlen - 1) << std::endl;
+    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1).real() << std::endl;
   }
 }
 
