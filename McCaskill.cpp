@@ -30,13 +30,13 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 2.75
+#define SCALING_FACTOR 2
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define ZERO_C dcomplex(0.0, 0.0)
 #define ONE_C dcomplex(1.0, 0.0)
-#define SCALE(power) dcomplex(pow(SCALING_FACTOR, power), 0)
+#define SCALE(power) pow(SCALING_FACTOR, power)
 #define DEBUG 1
 #define PRINT_MATRICES 0
 
@@ -62,12 +62,32 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   }
   
   // This will need to be parameterized.
+  std::cout << "Structure:" << std::endl;
   for (i = 0; i < seqlen; ++i) {
-    structure[i] = '.';
+    structure[i] = (i <= 2 ? '(' : (i >= 7 && i < 10 ? ')' : '.'));
+    std::cout << structure[i];
   }
+  std::cout << std::endl;
   
   basePairs = getBasePairList(structure);
   bpCounts  = fillBasePairCounts(basePairs, seqlen);
+  
+  std::cout << "Base pairs array:" << std::endl;
+  std::cout << "[ ";
+  for (i = 1; i <= seqlen; ++i) {
+    std::cout << basePairs[i] << " ";
+  }
+  std::cout << "]" << std::endl;
+  
+  std::cout << "Base pair counts:" << std::endl;
+  for (i = 1; i <= seqlen; ++i) {
+    std::cout << "[ ";
+    for (j = 1; j <= seqlen; ++j) {
+      std::cout << (j < i ? 0 : bpCounts[i][j]) << " ";
+    }
+    std::cout << "]" << std::endl;
+  }
+  
   
   // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
   for (root = 0; root <= round(seqlen / 2.0); ++root) {
@@ -121,10 +141,10 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     if (DEBUG && root == 0) {
       printf("c:        %f\n", (double)SCALING_FACTOR);
       printf("n:        %d\n", seqlen);
-      printf("c^(n-1):  %f\n", SCALE(seqlen - 1).real());
-      printf("Q[1][%d]: %f\n", seqlen, Z[1][seqlen].real());
-      printf("Z[1][%d]: %f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1).real());
-      printf("Z[%d][1]: %d\n", seqlen, (int)Z[seqlen][1].real());
+      printf("c^(n-1):  %f\n", SCALE(seqlen - 1));
+      printf("Q[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real());
+      printf("Z[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
+      printf("Z[%d][1]: %.15f\n", seqlen, Z[seqlen][1].real());
     }
     
     std::cout << '.' << std::flush;
@@ -288,7 +308,7 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   std::cout << "\n\nSum: " << sum << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1).real() << std::endl;
+    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
   }
 }
 
@@ -379,7 +399,7 @@ void printMatrix(dcomplex **matrix, char *title, int iStart, int iStop, int jSta
       
   for (i = iStart; i <= iStop; ++i) {
     for (j = jStart; j <= jStop; ++j) {
-      printf("%+.3f, %-+10.3f", matrix[i][j].real(), matrix[i][j].imag());
+      printf("%+.15f, %-+25.15f", matrix[i][j].real(), matrix[i][j].imag());
     }
     std::cout << std::endl;
   }
