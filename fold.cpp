@@ -478,8 +478,6 @@ struct sect {
 }
 static sector[MAXSECTORS]; /* stack of partial structures for backtracking */
 
-#include "circfold.inc"
-
 PRIVATE void backtrack(const char *string, int s) {
 
   /*------------------------------------------------------------------
