@@ -30,7 +30,7 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 2
+#define SCALING_FACTOR 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -64,8 +64,10 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     structure[i] = '.';
   }
   
-  basePairs      = getBasePairList(structure);
-  bpCounts = fillBasePairCounts(basePairs, seqlen);
+  basePairs = getBasePairList(structure);
+  bpCounts  = fillBasePairCounts(basePairs, seqlen);
+  
+  std::cout << "Sequence length: " << seqlen << std::endl;
   
   // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
   for (root = 0; root <= round(seqlen / 2.0); ++root) {
@@ -117,8 +119,8 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     }
     
     if (DEBUG && root == 0) {
-      printf("Z[1][seqlen]: %f\n", Z[1][seqlen].real());
-      printf("Z[seqlen][1]: %f\n", Z[seqlen][1].real());
+      printf("Z[1][%d]: %d\n", seqlen, (int)Z[1][seqlen].real());
+      printf("Z[%d][1]: %d\n", seqlen, (int)Z[seqlen][1].real());
     }
     
     std::cout << '.' << std::flush;
@@ -155,13 +157,13 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
     // (k, j) is the rightmost base pair in (i, j).
     if (BP(k, j, sequence)) {
       if (k == i) {
-        Z[i][j] += (ZB[k][j] * exp(-AU_Penalty(i, j, S0) / kT) * pow(x, jPairedIn(i, j, basePairs))) / SCALE(1);
+        Z[i][j] += (ZB[k][j] * pow(x, jPairedIn(i, j, basePairs))) / SCALE(1);
           
         if (STRUCTURE_COUNT) {
           Z[j][i] += ZB[j][k];
         }
       } else {
-        Z[i][j] += (Z[i][k - 1] * ZB[k][j] * exp(-AU_Penalty(k, j, S0) / kT) * pow(x, bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j])) / SCALE(1);
+        Z[i][j] += (Z[i][k - 1] * ZB[k][j] * pow(x, bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j])) / SCALE(1);
           
         if (STRUCTURE_COUNT) {
           Z[j][i] += Z[k - 1][i] * ZB[j][k];
@@ -176,7 +178,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   int k, l;
   
   // In a hairpin, (i + 1, j - 1) all unpaired.
-  ZB[i][j] += (exp(-HP_Energy(i, j, S0, sequence + 1) / kT) * pow(x, bpCounts[i][j] + jPairedTo(i, j, basePairs))) / SCALE(j - i);
+  ZB[i][j] += pow(x, bpCounts[i][j] + jPairedTo(i, j, basePairs)) / SCALE(j - i);
   
   if (STRUCTURE_COUNT) {
     ZB[j][i] += 1;
@@ -188,7 +190,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
       if (BP(k, l, sequence)) {
         // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
         // are all unpaired.
-        ZB[i][j] += (ZB[k][l] * exp(-IL_Energy(i, j, k, l, S0) / kT) * pow(x, bpCounts[i][j] - bpCounts[k][l] + jPairedTo(i, j, basePairs))) / SCALE(j - l + k - i);
+        ZB[i][j] += (ZB[k][l] * pow(x, bpCounts[i][j] - bpCounts[k][l] + jPairedTo(i, j, basePairs))) / SCALE(j - l + k - i);
         
         if (STRUCTURE_COUNT) {
           ZB[j][i] += ZB[l][k];
@@ -198,7 +200,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
         if (k > i + MIN_PAIR_DIST + 2) {
           // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
           // there is at least one hairpin between (i + 1, k - 1).
-          ZB[i][j] += (exp(-(ML_close + MLbasepairAndAUpenalty(j, i, S0)) / kT) * ZM[i + 1][k - 1] * ZB[k][l] * pow(x, bpCounts[i][j] - bpCounts[i + 1][k - 1] - bpCounts[k][l] + jPairedTo(i, j, basePairs))) / SCALE(j - l + 2);
+          ZB[i][j] += (ZM[i + 1][k - 1] * ZB[k][l] * pow(x, bpCounts[i][j] - bpCounts[i + 1][k - 1] - bpCounts[k][l] + jPairedTo(i, j, basePairs))) / SCALE(j - l + 2);
           
           if (STRUCTURE_COUNT) {
             ZB[j][i] += ZM[k - 1][i + 1] * ZB[l][k];
@@ -213,7 +215,6 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   int k;
   
   ZM[i][j] += (ZM[i][j - 1] * pow(x, jPairedIn(i, j, basePairs))) / SCALE(1);
-  // ZM[i][j] += (ZM[i][j - 1] * exp(-1 / kT) * pow(x, jPairedIn(i, j, basePairs))) / SCALE(1);
   
   if (STRUCTURE_COUNT) {
     ZM[j][i] += ZM[j - 1][i];
@@ -222,7 +223,7 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) {
     if (BP(k, j, sequence)) {
       // Only one stem.
-      ZM[i][j] += (ZB[k][j] * exp(-ML_base * (k - i) / kT) * pow(x, bpCounts[i][j] - bpCounts[k][j])) / SCALE(k - i);
+      ZM[i][j] += (ZB[k][j] * pow(x, bpCounts[i][j] - bpCounts[k][j])) / SCALE(k - i);
       
       if (STRUCTURE_COUNT) {
         ZM[j][i] += ZB[j][k];
@@ -231,7 +232,7 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
       // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
       // Different: (k > i) OLD vs. (k > i + MIN_PAIR_DIST + 2) NEW.
       if (k > i) {
-        ZM[i][j] += (ZM[i][k - 1] * ZB[k][j] * exp(-ML_base / kT) * pow(x, bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j])) / SCALE(1);
+        ZM[i][j] += (ZM[i][k - 1] * ZB[k][j] * pow(x, bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j])) / SCALE(1);
         
         if (STRUCTURE_COUNT) {
           ZM[j][i] += ZM[k - 1][i] * ZB[j][k];
