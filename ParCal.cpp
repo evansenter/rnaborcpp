@@ -12,7 +12,7 @@
 #include"ParCal.h"
 #include<limits.h>
 #include"misc.h"
-#include"RNAhairpin.h"
+#include"RNAbor.h"
 
 /*Partition function calculation for the RNAhairpin program*/
 int GetZB(double ***ZB, double ***ZM, double ***ZM1, int i, int j, int h, char sequence[MAXSIZE]){

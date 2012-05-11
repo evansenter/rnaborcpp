@@ -25,7 +25,7 @@
 #include "convert_Vienna.h"
 #include "params.h"
 #include <limits.h>
-#include "RNAhairpin.h"
+#include "RNAbor.h"
 #include "misc.h"
 #include "McCaskill.h"
 #include <lapackpp.h>
