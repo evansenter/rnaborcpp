@@ -64,7 +64,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // This will need to be parameterized.
   std::cout << "Structure:" << std::endl;
   for (i = 0; i < seqlen; ++i) {
-    structure[i] = (i <= 2 ? '(' : (i >= 7 && i < 10 ? ')' : '.'));
+    structure[i] = '.';
     std::cout << structure[i];
   }
   std::cout << std::endl;
@@ -169,9 +169,10 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
 }
 
 void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, dcomplex **Z, dcomplex **ZB) { 
-  int k;
+  int k, delta;
   
-  Z[i][j] += (Z[i][j - 1] * pow(x, jPairedIn(i, j, basePairs))) / SCALE(1);
+  delta    = jPairedIn(i, j, basePairs);
+  Z[i][j] += (Z[i][j - 1] * pow(x, delta)) / SCALE(1);
     
   if (STRUCTURE_COUNT) {
     Z[j][i] += Z[j - 1][i];
@@ -181,13 +182,15 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
     // (k, j) is the rightmost base pair in (i, j).
     if (BP(k, j, sequence)) {
       if (k == i) {
-        Z[i][j] += (ZB[k][j] * pow(x, jPairedIn(i, j, basePairs))) / SCALE(1);
+        delta    = jPairedToIndicator(k, j, basePairs) ? 0 : 1;
+        Z[i][j] += ZB[k][j] * pow(x, delta);
           
         if (STRUCTURE_COUNT) {
           Z[j][i] += ZB[j][k];
         }
       } else {
-        Z[i][j] += (Z[i][k - 1] * ZB[k][j] * pow(x, bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j])) / SCALE(1);
+        delta    = bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k + 1][j - 1] - jPairedToIndicator(k, j, basePairs);
+        Z[i][j] += (Z[i][k - 1] * ZB[k][j] * pow(x, delta)) / SCALE(1);
           
         if (STRUCTURE_COUNT) {
           Z[j][i] += Z[k - 1][i] * ZB[j][k];
@@ -199,32 +202,36 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
 
 void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, dcomplex **ZB, dcomplex **ZM) { 
   // (i, j) assumed to b.p. in here.
-  int k, l;
+  int k, l, delta;
   
-  // In a hairpin, (i + 1, j - 1) all unpaired.
-  ZB[i][j] += pow(x, bpCounts[i][j] + jPairedTo(i, j, basePairs)) / SCALE(j - i);
+  // In a hairpin, [i + 1, j - 1] unpaired.
+  delta     = jPairedToIndicator(i, j, basePairs) ? bpCounts[i + 1][j - 1] : bpCounts[i][j] + 1;
+  ZB[i][j] += pow(x, delta) / SCALE(j - i);
   
   if (STRUCTURE_COUNT) {
     ZB[j][i] += 1;
   }
   
   // Interior loop / bulge / stack / multiloop.
-  for (k = i + 1; k <= j - MIN_PAIR_DIST - 1; ++k) {
-    for (l = MAX(k + MIN_PAIR_DIST + 1, j - MAX_INTERIOR_DIST - 1); l < j; ++l) {
+  for (k = i + 1; k <= j - MIN_PAIR_DIST - 2; ++k) {
+    for (l = k + MIN_PAIR_DIST + 1; l < j; ++l) {
       if (BP(k, l, sequence)) {
-        // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
-        // are all unpaired.
-        ZB[i][j] += (ZB[k][l] * pow(x, bpCounts[i][j] - bpCounts[k][l] + jPairedTo(i, j, basePairs))) / SCALE(j - l + k - i);
+        if (k - i + j - l - 2 <= MAX_INTERIOR_DIST) {
+          // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
+          // are all unpaired.
+          delta     = bpCounts[i][j] - bpCounts[k + 1][l - 1] - jPairedToIndicator(i, j, basePairs) - jPairedToIndicator(k, l, basePairs);
+          ZB[i][j] += (ZB[k][l] * pow(x, delta)) / SCALE(j - l + k - i);
         
-        if (STRUCTURE_COUNT) {
-          ZB[j][i] += ZB[l][k];
+          if (STRUCTURE_COUNT) {
+            ZB[j][i] += ZB[l][k];
+          }
         }
         
-        // Different: (i) OLD vs. (i + MIN_PAIR_DIST + 2) NEW.
         if (k > i + MIN_PAIR_DIST + 2) {
           // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
           // there is at least one hairpin between (i + 1, k - 1).
-          ZB[i][j] += (ZM[i + 1][k - 1] * ZB[k][l] * pow(x, bpCounts[i][j] - bpCounts[i + 1][k - 1] - bpCounts[k][l] + jPairedTo(i, j, basePairs))) / SCALE(j - l + 2);
+          delta     = bpCounts[i][j] - bpCounts[i + 1][k - 1] - bpCounts[k + 1][l - 1] - jPairedToIndicator(i, j, basePairs) - jPairedToIndicator(k, l, basePairs);
+          ZB[i][j] += (ZM[i + 1][k - 1] * ZB[k][l] * pow(x, delta)) / SCALE(j - l + 2);
           
           if (STRUCTURE_COUNT) {
             ZB[j][i] += ZM[k - 1][i + 1] * ZB[l][k];
@@ -236,9 +243,10 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
 }
 
 void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, dcomplex **ZB, dcomplex **ZM) { 
-  int k;
+  int k, delta;
   
-  ZM[i][j] += (ZM[i][j - 1] * pow(x, jPairedIn(i, j, basePairs))) / SCALE(1);
+  delta     = jPairedIn(i, j, basePairs);
+  ZM[i][j] += (ZM[i][j - 1] * pow(x, delta)) / SCALE(1);
   
   if (STRUCTURE_COUNT) {
     ZM[j][i] += ZM[j - 1][i];
@@ -247,16 +255,17 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   for (k = i; k <= j - MIN_PAIR_DIST - 1; ++k) {
     if (BP(k, j, sequence)) {
       // Only one stem.
-      ZM[i][j] += (ZB[k][j] * pow(x, bpCounts[i][j] - bpCounts[k][j])) / SCALE(k - i);
+      delta     = bpCounts[i][j] - bpCounts[k][j];
+      ZM[i][j] += (ZB[k][j] * pow(x, delta)) / SCALE(k - i);
       
       if (STRUCTURE_COUNT) {
         ZM[j][i] += ZB[j][k];
       }
       
-      // k needs to be greater than MIN_PAIR_DIST + 2 from i to fit more than one stem.
-      // Different: (k > i) OLD vs. (k > i + MIN_PAIR_DIST + 2) NEW.
+      // More than one stem.
       if (k > i) {
-        ZM[i][j] += (ZM[i][k - 1] * ZB[k][j] * pow(x, bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j])) / SCALE(1);
+        delta     = bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j];
+        ZM[i][j] += (ZM[i][k - 1] * ZB[k][j] * pow(x, delta)) / SCALE(1);
         
         if (STRUCTURE_COUNT) {
           ZM[j][i] += ZM[k - 1][i] * ZB[j][k];
@@ -312,8 +321,8 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   }
 }
 
-int jPairedTo(int i, int j, int *basePairs) {
-  return basePairs[i] == j ? -1 : 1;
+int jPairedToIndicator(int i, int j, int *basePairs) {
+  return basePairs[i] == j ? 1 : 0;
 }
 
 int jPairedIn(int i, int j, int *basePairs) {

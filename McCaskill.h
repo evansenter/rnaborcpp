@@ -10,7 +10,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
 void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM);
 void solveLinearSystem(dcomplex **rootsOfUnity);
 int jPairedIn(int i, int j, int *basePairs);
-int jPairedTo(int i, int j, int *basePairs);
+int jPairedToIndicator(int i, int j, int *basePairs);
 int* getBasePairList(char *structure);
 int numberOfBasePairs(int i, int j, int *basePairs);
 int** fillBasePairCounts(int *basePairs, int n);
