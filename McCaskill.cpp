@@ -182,7 +182,7 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
     // (k, j) is the rightmost base pair in (i, j).
     if (BP(k, j, sequence)) {
       if (k == i) {
-        delta    = jPairedIn(i, j, basePairs);
+        delta    = bpCounts[i][j] - bpCounts[k][j];
         Z[i][j] += ZB[k][j] * pow(x, delta);
           
         if (STRUCTURE_COUNT) {
