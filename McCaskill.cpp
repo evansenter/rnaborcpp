@@ -182,14 +182,14 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
     // (k, j) is the rightmost base pair in (i, j).
     if (BP(k, j, sequence)) {
       if (k == i) {
-        delta    = jPairedToIndicator(k, j, basePairs) ? 0 : 1;
+        delta    = jPairedIn(i, j, basePairs);
         Z[i][j] += ZB[k][j] * pow(x, delta);
           
         if (STRUCTURE_COUNT) {
           Z[j][i] += ZB[j][k];
         }
       } else {
-        delta    = bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k + 1][j - 1] - jPairedToIndicator(k, j, basePairs);
+        delta    = bpCounts[i][j] - bpCounts[i][k - 1] - bpCounts[k][j];
         Z[i][j] += (Z[i][k - 1] * ZB[k][j] * pow(x, delta)) / SCALE(1);
           
         if (STRUCTURE_COUNT) {
@@ -205,7 +205,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   int k, l, delta;
   
   // In a hairpin, [i + 1, j - 1] unpaired.
-  delta     = jPairedToIndicator(i, j, basePairs) ? bpCounts[i + 1][j - 1] : bpCounts[i][j] + 1;
+  delta     = bpCounts[i][j] + jPairedTo(i, j, basePairs);
   ZB[i][j] += pow(x, delta) / SCALE(j - i);
   
   if (STRUCTURE_COUNT) {
@@ -219,7 +219,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
         if (k - i + j - l - 2 <= MAX_INTERIOR_DIST) {
           // In interior loop / bulge / stack with (i, j) and (k, l), (i + 1, k - 1) and (l + 1, j - 1)
           // are all unpaired.
-          delta     = bpCounts[i][j] - bpCounts[k + 1][l - 1] - jPairedToIndicator(i, j, basePairs) - jPairedToIndicator(k, l, basePairs);
+          delta     = bpCounts[i][j] - bpCounts[k][l] + jPairedTo(i, j, basePairs);
           ZB[i][j] += (ZB[k][l] * pow(x, delta)) / SCALE(j - l + k - i);
         
           if (STRUCTURE_COUNT) {
@@ -230,7 +230,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
         if (k > i + MIN_PAIR_DIST + 2) {
           // If (i, j) is the closing b.p. of a multiloop, and (k, l) is the rightmost base pair, 
           // there is at least one hairpin between (i + 1, k - 1).
-          delta     = bpCounts[i][j] - bpCounts[i + 1][k - 1] - bpCounts[k + 1][l - 1] - jPairedToIndicator(i, j, basePairs) - jPairedToIndicator(k, l, basePairs);
+          delta     = bpCounts[i][j] - bpCounts[i + 1][k - 1] - bpCounts[k][l] + jPairedTo(i, j, basePairs);
           ZB[i][j] += (ZM[i + 1][k - 1] * ZB[k][l] * pow(x, delta)) / SCALE(j - l + 2);
           
           if (STRUCTURE_COUNT) {
@@ -321,8 +321,8 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   }
 }
 
-int jPairedToIndicator(int i, int j, int *basePairs) {
-  return basePairs[i] == j ? 1 : 0;
+int jPairedTo(int i, int j, int *basePairs) {
+  return basePairs[i] == j ? -1 : 1;
 }
 
 int jPairedIn(int i, int j, int *basePairs) {
