@@ -314,7 +314,13 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
     std::cout << i << ": " << X(i).r / sum << std::endl;
   }
   
-  std::cout << "\n\nSum: " << sum << std::endl;
+  std::cout << "\n\nSum (scaled): " << sum << std::endl;
+  
+  for (i = 0; i <= seqlen; ++i) {
+    std::cout << i << ": " << X(i).r << std::endl;
+  }
+  
+  std::cout << "\n\nSum (unscaled): " << sum << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
     std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
