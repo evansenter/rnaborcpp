@@ -163,7 +163,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   
   std::cout << std::endl;
   
-  solveLinearSystem(rootsOfUnity);
+  solveLinearSystem(rootsOfUnity, Z);
   
   return Z;
 }
@@ -275,10 +275,10 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   }
 }
 
-void solveLinearSystem(dcomplex **rootsOfUnity) {
+void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
   int i, j;
   dcomplex poweredRoot;
-  double sum;
+  double sum, unscaled, counted;
   
   if (DEBUG) {
     printMatrix(rootsOfUnity, (char *)"Roots and solutions:", 0, seqlen, 0, 1);
@@ -308,23 +308,26 @@ void solveLinearSystem(dcomplex **rootsOfUnity) {
   }
   
   std::cout << "Solution:" << std::endl;
-  std::cout << "Sum (normalized): " << sum << std::endl;
+  std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
+  
+  for (i = 0; i <= seqlen; ++i) {
+    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
+  }
+  
+  std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
     std::cout << i << ": " << X(i).r / sum << std::endl;
   }
   
-  std::cout << "\n\nSum (scaled): " << sum << std::endl;
+  std::cout << std::endl;
   
-  for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r << std::endl;
-  }
+  unscaled = sum * SCALE(seqlen - 1);
+  counted  = Z[seqlen][1].real();
   
-  std::cout << "\n\nSum (unscaled): " << sum << std::endl;
-  
-  for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
-  }
+  printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
+  printf("The total number of structures by counting is:             %.0f.\n", counted);
+  printf("|100 * (unscaled - counted) / counted|:                    %.15f.\n", fabs(100 * (unscaled - counted) / counted));
 }
 
 int jPairedTo(int i, int j, int *basePairs) {
