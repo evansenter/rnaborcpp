@@ -1,18 +1,3 @@
-// >B.japonicum.5 AJ003064.1/2430-2312
-// CGCCGCCGCAGGGCGGCUCUCCGGGCGCCUGACGGGCUCGGCGAAUCCAGAGACGGGCACCGGUCGUGUCCGGUGCCGCUCGUAACCAUUUUGCUCCGUGGAGGAUCUGGCUAUGCGCA
-// 
-// GGGGGCCCCCGGGGGCCCCCGGGGGCCCCC
-// 19049760
-// 
-// CGUUGUGACCGGAAUGGAGUGGUGUCUGGUCUGGGACAUGUAUACCGCAAUACAGCUCCUCUCUUGGUCCUUAGUCCCUGGUUUUGUCACGCUUAAUCCC
-// 596353231727330381639733
-// 
-// GGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCC
-// 11843733310154873 (according to webserver)
-// 11540343231278612 (according to Zuker [with MAX_INTERIOR_DIST 30])
-// 11540343268028146 (according to Zuker [without MAX_INTERIOR_DIST])
-// 11843733310160115 (according to Nussinov)
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,36 +15,36 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 2
+#define SCALING_FACTOR 3
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define ZERO_C dcomplex(0.0, 0.0)
-#define ONE_C dcomplex(1.0, 0.0)
+#define ZERO_C 0.0
+#define ONE_C 1.0
 #define SCALE(power) pow(SCALING_FACTOR, power)
 #define DEBUG 1
 #define PRINT_MATRICES 0
 #define PRINT_BP_ARRAYS 0
 
-dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
+double** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
   int root, i, j, k, d, *basePairs, **bpCounts;
   char structure[seqlen];
   
   std::cout.precision(15);
   
-  dcomplex **Z            = new dcomplex*[seqlen + 1];
-  dcomplex **ZB           = new dcomplex*[seqlen + 1];
-  dcomplex **ZM           = new dcomplex*[seqlen + 1];
-  dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
+  double **Z            = new double*[seqlen + 1];
+  double **ZB           = new double*[seqlen + 1];
+  double **ZM           = new double*[seqlen + 1];
+  double **rootsOfUnity   = new double*[seqlen + 1];
   
   // Matrix allocation.
   for (i = 0; i <= seqlen; ++i) {
-    Z[i]               = new dcomplex[seqlen + 1];
-    ZB[i]              = new dcomplex[seqlen + 1];
-    ZM[i]              = new dcomplex[seqlen + 1];
-    rootsOfUnity[i]    = new dcomplex[2];
-    rootsOfUnity[i][0] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
+    Z[i]               = new double[seqlen + 1];
+    ZB[i]              = new double[seqlen + 1];
+    ZM[i]              = new double[seqlen + 1];
+    rootsOfUnity[i]    = new double[2];
+    rootsOfUnity[i][0] = i + 1;
   }
   
   // This will need to be parameterized.
@@ -92,7 +77,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   }
   
   // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
-  for (root = 0; root <= round(seqlen / 2.0); ++root) {
+  for (root = 0; root <= seqlen; ++root) {
     // Flush the matrices.
     for (i = 0; i <= seqlen; ++i) {
       for (j = 0; j <= seqlen; ++j) {
@@ -144,23 +129,12 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       printf("c:        %f\n", (double)SCALING_FACTOR);
       printf("n:        %d\n", seqlen);
       printf("c^(n-1):  %f\n", SCALE(seqlen - 1));
-      printf("Q[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real());
-      printf("Z[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
-      printf("Z[%d][1]: %.15f\n", seqlen, Z[seqlen][1].real());
+      printf("Q[1][%d]: %.15f\n", seqlen, Z[1][seqlen]);
+      printf("Z[1][%d]: %.15f\n", seqlen, Z[1][seqlen] * SCALE(seqlen - 1));
+      printf("Z[%d][1]: %.15f\n", seqlen, Z[seqlen][1]);
     }
     
     std::cout << '.' << std::flush;
-  }
-  
-  // Optimization leveraging complementarity of roots of unity.
-  if (seqlen % 2) {
-    i = root - 2;
-  } else {
-    i = root - 1;
-  }
-  
-  for (; root <= seqlen && i > 0; --i, ++root) {
-    rootsOfUnity[root][1] = dcomplex(rootsOfUnity[i][1].real(), -rootsOfUnity[i][1].imag());
   }
   
   std::cout << std::endl;
@@ -170,7 +144,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   return Z;
 }
 
-void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, dcomplex **Z, dcomplex **ZB) { 
+void solveZ(int i, int j, double x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, double **Z, double **ZB) { 
   int k, delta;
   
   delta    = jPairedIn(i, j, basePairs);
@@ -202,7 +176,7 @@ void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, in
   }
 }
 
-void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, dcomplex **ZB, dcomplex **ZM) { 
+void solveZB(int i, int j, double x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, double **ZB, double **ZM) { 
   // (i, j) assumed to b.p. in here.
   int k, l, delta;
   
@@ -244,7 +218,7 @@ void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   }
 }
 
-void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, dcomplex **ZB, dcomplex **ZM) { 
+void solveZM(int i, int j, double x, char sequence[MAXSIZE], int *basePairs, int **bpCounts, double **ZB, double **ZM) { 
   int k, delta;
   
   delta     = jPairedIn(i, j, basePairs);
@@ -277,55 +251,50 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   }
 }
 
-void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
+void solveLinearSystem(double **rootsOfUnity, double **Z) {
   int i, j;
-  dcomplex poweredRoot;
-  double sum, unscaled, counted;
+  double sum, poweredRoot, unscaled, counted;
   
   if (DEBUG) {
     printMatrix(rootsOfUnity, (char *)"Roots and solutions:", 0, seqlen, 0, 1);
   }
   
   // Might need to free this memory.
-  LaGenMatComplex A(seqlen + 1, seqlen + 1);
-  LaVectorComplex X(seqlen + 1);
-  LaVectorComplex B(seqlen + 1);
+  LaGenMatDouble A(seqlen + 1, seqlen + 1);
+  LaVectorDouble X(seqlen + 1);
+  LaVectorDouble B(seqlen + 1);
   
   for (i = 0; i <= seqlen; ++i) {
     for (j = 0; j <= seqlen; ++j) {
-      poweredRoot = pow(rootsOfUnity[i][0], j);
-      
-      A(i, j).r = poweredRoot.real();
-      A(i, j).i = poweredRoot.imag();
+      A(i, j) = pow(rootsOfUnity[i][0], j);
     }
     
-    B(i).r = rootsOfUnity[i][1].real();
-    B(i).i = rootsOfUnity[i][1].imag();
+    B(i) = rootsOfUnity[i][1];
   }
   
   LaLinearSolveIP(A, X, B);
 
   for (i = 0; i <= seqlen; ++i) {
-    sum = sum + X(i).r;
+    sum = sum + X(i);
   }
   
   std::cout << "Solution:" << std::endl;
   std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
+    std::cout << i << ": " << X(i) * SCALE(seqlen - 1) << std::endl;
   }
   
   std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r / sum << std::endl;
+    std::cout << i << ": " << X(i) / sum << std::endl;
   }
   
   std::cout << std::endl;
   
   unscaled = sum * SCALE(seqlen - 1);
-  counted  = Z[seqlen][1].real();
+  counted  = Z[seqlen][1];
   
   printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
   printf("The total number of structures by counting is:             %.0f.\n", counted);
@@ -412,14 +381,14 @@ int** fillBasePairCounts(int *basePairs, int n) {
   return bpCounts;
 }
 
-void printMatrix(dcomplex **matrix, char *title, int iStart, int iStop, int jStart, int jStop) {
+void printMatrix(double **matrix, char *title, int iStart, int iStop, int jStart, int jStop) {
   int i, j;
   
   printf("%s\n", title);
       
   for (i = iStart; i <= iStop; ++i) {
     for (j = jStart; j <= jStop; ++j) {
-      printf("%+.15f, %-+25.15f", matrix[i][j].real(), matrix[i][j].imag());
+      std::cout << matrix[i][j] << std::endl;
     }
     std::cout << std::endl;
   }
