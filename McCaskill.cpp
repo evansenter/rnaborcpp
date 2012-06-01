@@ -1,18 +1,3 @@
-// >B.japonicum.5 AJ003064.1/2430-2312
-// CGCCGCCGCAGGGCGGCUCUCCGGGCGCCUGACGGGCUCGGCGAAUCCAGAGACGGGCACCGGUCGUGUCCGGUGCCGCUCGUAACCAUUUUGCUCCGUGGAGGAUCUGGCUAUGCGCA
-// 
-// GGGGGCCCCCGGGGGCCCCCGGGGGCCCCC
-// 19049760
-// 
-// CGUUGUGACCGGAAUGGAGUGGUGUCUGGUCUGGGACAUGUAUACCGCAAUACAGCUCCUCUCUUGGUCCUUAGUCCCUGGUUUUGUCACGCUUAAUCCC
-// 596353231727330381639733
-// 
-// GGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCCGGGGGCCCCC
-// 11843733310154873 (according to webserver)
-// 11540343231278612 (according to Zuker [with MAX_INTERIOR_DIST 30])
-// 11540343268028146 (according to Zuker [without MAX_INTERIOR_DIST])
-// 11843733310160115 (according to Nussinov)
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -43,23 +28,23 @@
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
-  int root, i, j, k, d, *basePairs, **bpCounts;
+  int i, j, k, d, *basePairs, **bpCounts;
   char structure[seqlen];
   
   std::cout.precision(15);
   
-  dcomplex **Z            = new dcomplex*[seqlen + 1];
-  dcomplex **ZB           = new dcomplex*[seqlen + 1];
-  dcomplex **ZM           = new dcomplex*[seqlen + 1];
-  dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
+  dcomplex **Z  = new dcomplex*[seqlen + 1];
+  dcomplex **ZB = new dcomplex*[seqlen + 1];
+  dcomplex **ZM = new dcomplex*[seqlen + 1];
+  dcomplex root;
+  
+  root = ONE_C;
   
   // Matrix allocation.
   for (i = 0; i <= seqlen; ++i) {
-    Z[i]               = new dcomplex[seqlen + 1];
-    ZB[i]              = new dcomplex[seqlen + 1];
-    ZM[i]              = new dcomplex[seqlen + 1];
-    rootsOfUnity[i]    = new dcomplex[2];
-    rootsOfUnity[i][0] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
+    Z[i]  = new dcomplex[seqlen + 1];
+    ZB[i] = new dcomplex[seqlen + 1];
+    ZM[i] = new dcomplex[seqlen + 1];
   }
   
   // This will need to be parameterized.
@@ -91,81 +76,64 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     }
   }
   
-  // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
-  for (root = 0; root <= round(seqlen / 2.0); ++root) {
-    // Flush the matrices.
-    for (i = 0; i <= seqlen; ++i) {
-      for (j = 0; j <= seqlen; ++j) {
-        Z[i][j]  = ZERO_C;
-        ZB[i][j] = ZERO_C;
-        ZM[i][j] = ZERO_C;
-      }
+  // Start main recursions.
+  // Flush the matrices.
+  for (i = 0; i <= seqlen; ++i) {
+    for (j = 0; j <= seqlen; ++j) {
+      Z[i][j]  = ZERO_C;
+      ZB[i][j] = ZERO_C;
+      ZM[i][j] = ZERO_C;
     }
-    
-    for (d = 0; d <= MIN_PAIR_DIST; ++d) {
-      for (i = 1; i <= seqlen - d; ++i) {
-        j = i + d;
-        
-        Z[i][j] = SCALE(-d);
-        
-        if (STRUCTURE_COUNT && i != j) {
-          Z[j][i] = ONE_C;
-        }
-      }
-    }
-    
-    if (PRINT_MATRICES) {
-      std::cout << "SOLUTIONS FOR ROOT " << root << ": " << rootsOfUnity[root][0] << std::endl;
-      
-      printMatrix(Z, (char *)"Initialized matrix (1-indexed):", 0, seqlen, 0, seqlen);
-    }
-    
-    for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
-      for (i = 1; i <= seqlen - d; ++i) {
-        j = i + d;
-      
-        if (BP(i, j, sequence)) {
-          solveZB(i, j, rootsOfUnity[root][0], sequence, basePairs, bpCounts, ZB, ZM);
-        }
-        
-        solveZM(i, j, rootsOfUnity[root][0], sequence, basePairs, bpCounts, ZB, ZM);
-        
-        solveZ(i, j, rootsOfUnity[root][0], sequence, basePairs, bpCounts, Z, ZB);
-      }
-    }
-    
-    rootsOfUnity[root][1] = Z[1][seqlen];
-    
-    if (PRINT_MATRICES) {
-      printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 0, seqlen, 0, seqlen);
-    }
-    
-    if (DEBUG && root == 0) {
-      printf("c:        %f\n", (double)SCALING_FACTOR);
-      printf("n:        %d\n", seqlen);
-      printf("c^(n-1):  %f\n", SCALE(seqlen - 1));
-      printf("Q[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real());
-      printf("Z[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
-      printf("Z[%d][1]: %.15f\n", seqlen, Z[seqlen][1].real());
-    }
-    
-    std::cout << '.' << std::flush;
   }
-  
-  // Optimization leveraging complementarity of roots of unity.
-  if (seqlen % 2) {
-    i = root - 2;
-  } else {
-    i = root - 1;
+    
+  for (d = 0; d <= MIN_PAIR_DIST; ++d) {
+    for (i = 1; i <= seqlen - d; ++i) {
+      j = i + d;
+        
+      Z[i][j] = SCALE(-d);
+        
+      if (STRUCTURE_COUNT && i != j) {
+        Z[j][i] = ONE_C;
+      }
+    }
   }
-  
-  for (; root <= seqlen && i > 0; --i, ++root) {
-    rootsOfUnity[root][1] = dcomplex(rootsOfUnity[i][1].real(), -rootsOfUnity[i][1].imag());
+    
+  if (PRINT_MATRICES) {
+    std::cout << "SOLUTIONS FOR ROOT " << root << ": " << root << std::endl;
+      
+    printMatrix(Z, (char *)"Initialized matrix (1-indexed):", 0, seqlen, 0, seqlen);
+  }
+    
+  for (d = MIN_PAIR_DIST + 1; d < seqlen; ++d) {
+    for (i = 1; i <= seqlen - d; ++i) {
+      j = i + d;
+      
+      if (BP(i, j, sequence)) {
+        solveZB(i, j, root, sequence, basePairs, bpCounts, ZB, ZM);
+      }
+        
+      solveZM(i, j, root, sequence, basePairs, bpCounts, ZB, ZM);
+        
+      solveZ(i, j, root, sequence, basePairs, bpCounts, Z, ZB);
+    }
+  }
+    
+  if (PRINT_MATRICES) {
+    printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 0, seqlen, 0, seqlen);
+  }
+    
+  if (DEBUG) {
+    printf("c:        %f\n", (double)SCALING_FACTOR);
+    printf("n:        %d\n", seqlen);
+    printf("c^(n-1):  %f\n", SCALE(seqlen - 1));
+    printf("Q[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real());
+    printf("Z[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
+    printf("Z[%d][1]: %.15f\n", seqlen, Z[seqlen][1].real());
   }
   
   std::cout << std::endl;
   
-  solveLinearSystem(rootsOfUnity, Z);
+  solveLinearSystem(root, Z);
   
   return Z;
 }
@@ -277,54 +245,11 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   }
 }
 
-void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
-  int i, j;
+void solveLinearSystem(dcomplex root, dcomplex **Z) {
   dcomplex poweredRoot;
-  double sum, unscaled, counted;
+  double unscaled, counted;
   
-  if (DEBUG) {
-    printMatrix(rootsOfUnity, (char *)"Roots and solutions:", 0, seqlen, 0, 1);
-  }
-  
-  // Might need to free this memory.
-  LaGenMatComplex A(seqlen + 1, seqlen + 1);
-  LaVectorComplex X(seqlen + 1);
-  LaVectorComplex B(seqlen + 1);
-  
-  for (i = 0; i <= seqlen; ++i) {
-    for (j = 0; j <= seqlen; ++j) {
-      poweredRoot = pow(rootsOfUnity[i][0], j);
-      
-      A(i, j).r = poweredRoot.real();
-      A(i, j).i = poweredRoot.imag();
-    }
-    
-    B(i).r = rootsOfUnity[i][1].real();
-    B(i).i = rootsOfUnity[i][1].imag();
-  }
-  
-  LaLinearSolveIP(A, X, B);
-
-  for (i = 0; i <= seqlen; ++i) {
-    sum = sum + X(i).r;
-  }
-  
-  std::cout << "Solution:" << std::endl;
-  std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
-  
-  for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
-  }
-  
-  std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
-  
-  for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r / sum << std::endl;
-  }
-  
-  std::cout << std::endl;
-  
-  unscaled = sum * SCALE(seqlen - 1);
+  unscaled = Z[1][seqlen].real() * SCALE(seqlen - 1);
   counted  = Z[seqlen][1].real();
   
   printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
