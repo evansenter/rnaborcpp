@@ -39,6 +39,7 @@
 #define SCALE(power) pow(SCALING_FACTOR, power)
 #define DEBUG 1
 #define PRINT_MATRICES 0
+#define PRINT_BP_ARRAYS 0
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
@@ -72,22 +73,23 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   basePairs = getBasePairList(structure);
   bpCounts  = fillBasePairCounts(basePairs, seqlen);
   
-  std::cout << "Base pairs array:" << std::endl;
-  std::cout << "[ ";
-  for (i = 1; i <= seqlen; ++i) {
-    std::cout << basePairs[i] << " ";
-  }
-  std::cout << "]" << std::endl;
-  
-  std::cout << "Base pair counts:" << std::endl;
-  for (i = 1; i <= seqlen; ++i) {
+  if (PRINT_BP_ARRAYS) {
+    std::cout << "Base pairs array:" << std::endl;
     std::cout << "[ ";
-    for (j = 1; j <= seqlen; ++j) {
-      std::cout << (j < i ? 0 : bpCounts[i][j]) << " ";
+    for (i = 1; i <= seqlen; ++i) {
+      std::cout << basePairs[i] << " ";
     }
     std::cout << "]" << std::endl;
-  }
   
+    std::cout << "Base pair counts:" << std::endl;
+    for (i = 1; i <= seqlen; ++i) {
+      std::cout << "[ ";
+      for (j = 1; j <= seqlen; ++j) {
+        std::cout << (j < i ? 0 : bpCounts[i][j]) << " ";
+      }
+      std::cout << "]" << std::endl;
+    }
+  }
   
   // Start main recursions (root <= round(seqlen / 2.0) is an optimization for roots of unity).
   for (root = 0; root <= round(seqlen / 2.0); ++root) {
