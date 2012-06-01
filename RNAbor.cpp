@@ -29,7 +29,7 @@ int main(int argc, char *argv[]){
   double **HPMAX;
   double HP[MAXSIZE],HN[MAXSIZE];
   int H_MAX=INT_MAX;
-  std::complex<double> totalpar; //total partition function
+  double totalpar; //total partition function
   if (argc==3||argc==5)
     {
       i=1;
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
     //printf("%.15f\n",kT);
     ML_base=0;//(double)P->MLbase/100;
     ML_close=0;//(double)P->MLclosing/100;
-    std::complex<double>** McCaskillZ;
+    double** McCaskillZ;
     McCaskillZ=runMcCaskill(sequence);
     totalpar=McCaskillZ[1][seqlen];
     printf("The RNA sequence is %s:\n",sequence+1);
