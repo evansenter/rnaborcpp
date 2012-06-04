@@ -72,11 +72,11 @@ int main(int argc, char *argv[]){
     //printf("%.15f\n",kT);
     ML_base=0;//(double)P->MLbase/100;
     ML_close=0;//(double)P->MLclosing/100;
-    std::complex<double>** McCaskillZ;
+    std::complex<long double>** McCaskillZ;
     McCaskillZ=runMcCaskill(sequence);
     totalpar=McCaskillZ[1][seqlen];
     printf("The RNA sequence is %s:\n",sequence+1);
-    // printf("The total number of structures is %.0f.\n", McCaskillZ[seqlen][1].real());
+    // printf("The total number of structures is %.0Lf.\n", McCaskillZ[seqlen][1].real());
   }
   else{
     printf("Usage:");

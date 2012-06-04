@@ -2,12 +2,12 @@
 
 #include <complex>
 
-typedef std::complex<double> dcomplex;
+typedef std::complex<long double> dcomplex;
 
-std::complex<double>** runMcCaskill(char sequence[MAXSIZE]);
-void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **Z, std::complex<double> **ZB);
-void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM);
-void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM);
+dcomplex** runMcCaskill(char sequence[MAXSIZE]);
+void solveZ( int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, dcomplex **Z,  dcomplex **ZB);
+void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, dcomplex **ZB, dcomplex **ZM);
+void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, dcomplex **ZB, dcomplex **ZM);
 void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z);
 int jPairedIn(int i, int j, int *basePairs);
 int jPairedTo(int i, int j, int *basePairs);

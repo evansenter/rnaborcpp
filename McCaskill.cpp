@@ -15,13 +15,13 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 2.5
+#define SCALING_FACTOR 2
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define ZERO_C dcomplex(0.0, 0.0)
 #define ONE_C dcomplex(1.0, 0.0)
-#define SCALE(power) pow(SCALING_FACTOR, power)
+#define SCALE(power) dcomplex(pow(SCALING_FACTOR, power), 0)
 #define DEBUG 1
 #define PRINT_MATRICES 0
 #define PRINT_DETAILED_MATRICIES 0
@@ -128,11 +128,11 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     if (DEBUG && root == 0) {
       printf("c:         %f\n", (double)SCALING_FACTOR);
       printf("n:         %d\n", seqlen);
-      printf("c^(n-1):   %f\n", SCALE(seqlen - 1));
-      printf("x:         %+f, %+f\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
-      printf("Q[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real());
-      printf("Z[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
-      printf("Z[%d][1]:  %.15f\n", seqlen, Z[seqlen][1].real());
+      printf("c^(n-1):   %Lf\n", SCALE(seqlen - 1).real());
+      printf("x:         %+Lf, %+Lf\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
+      printf("Q[1][%d]:  %.15Lf\n", seqlen, Z[1][seqlen].real());
+      printf("Z[1][%d]:  %.15Lf\n", seqlen, (Z[1][seqlen] * SCALE(seqlen - 1)).real());
+      printf("Z[%d][1]:  %.15Lf\n", seqlen, Z[seqlen][1].real());
     }
     
     std::cout << '.' << std::flush;
@@ -266,7 +266,7 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
 void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
   int i, j;
   dcomplex poweredRoot;
-  double sum, unscaled, counted;
+  long double sum, unscaled, counted;
   
   if (DEBUG) {
     printMatrix(rootsOfUnity, (char *)"Roots and solutions:", 0, seqlen, 0, 1);
@@ -303,7 +303,7 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
   std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
   
   for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
+    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1).real() << std::endl;
   }
   
   std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
@@ -314,11 +314,11 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
   
   std::cout << std::endl;
   
-  unscaled = sum * SCALE(seqlen - 1);
+  unscaled = sum * SCALE(seqlen - 1).real();
   counted  = Z[seqlen][1].real();
   
-  printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
-  printf("The total number of structures by counting is:             %.0f.\n", counted);
+  printf("The total number of structures by unscaling recursions is: %Lf.\n", unscaled);
+  printf("The total number of structures by counting is:             %.0Lf.\n", counted);
   printf("|100 * (unscaled - counted) / counted|:                    %.15f.\n", fabs(100 * (unscaled - counted) / counted));
 }
 
@@ -409,7 +409,7 @@ void printMatrix(dcomplex **matrix, char *title, int iStart, int iStop, int jSta
       
   for (i = iStart; i <= iStop; ++i) {
     for (j = jStart; j <= jStop; ++j) {
-      printf("%+.15f, %-+25.15f", matrix[i][j].real(), matrix[i][j].imag());
+      printf("%+.15Lf, %-+25.15Lf", matrix[i][j].real(), matrix[i][j].imag());
     }
     std::cout << std::endl;
   }
