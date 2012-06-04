@@ -39,7 +39,7 @@
 #define SCALE(power) pow(SCALING_FACTOR, power)
 #define DEBUG 1
 #define PRINT_MATRICES 0
-#define PRINT_BP_ARRAYS 0
+#define PRINT_DETAILED_MATRICIES 0
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   // Variable declarations.
@@ -63,7 +63,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   }
   
   // This will need to be parameterized.
-  std::cout << "Structure:" << std::endl;
+  std::cout << "Structure: ";
   for (i = 0; i < seqlen; ++i) {
     structure[i] = '.';
     std::cout << structure[i];
@@ -73,7 +73,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   basePairs = getBasePairList(structure);
   bpCounts  = fillBasePairCounts(basePairs, seqlen);
   
-  if (PRINT_BP_ARRAYS) {
+  if (PRINT_DETAILED_MATRICIES) {
     std::cout << "Base pairs array:" << std::endl;
     std::cout << "[ ";
     for (i = 1; i <= seqlen; ++i) {
@@ -141,13 +141,13 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     }
     
     if (DEBUG && root == 0) {
-      printf("c:        %f\n", (double)SCALING_FACTOR);
-      printf("n:        %d\n", seqlen);
-      printf("c^(n-1):  %f\n", SCALE(seqlen - 1));
-      printf("x:        %+f, %+f\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
-      printf("Q[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real());
-      printf("Z[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
-      printf("Z[%d][1]: %.15f\n", seqlen, Z[seqlen][1].real());
+      printf("c:         %f\n", (double)SCALING_FACTOR);
+      printf("n:         %d\n", seqlen);
+      printf("c^(n-1):   %f\n", SCALE(seqlen - 1));
+      printf("x:         %+f, %+f\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
+      printf("Q[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real());
+      printf("Z[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
+      printf("Z[%d][1]:  %.15f\n", seqlen, Z[seqlen][1].real());
     }
     
     std::cout << '.' << std::flush;
@@ -164,7 +164,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     rootsOfUnity[root][1] = dcomplex(rootsOfUnity[i][1].real(), -rootsOfUnity[i][1].imag());
   }
   
-  std::cout << std::endl;
+  printf("\n\n");
   
   solveLinearSystem(rootsOfUnity, Z);
   
@@ -299,7 +299,9 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
       A(i, j).r = poweredRoot.real();
       A(i, j).i = poweredRoot.imag();
       
-      printf("A(%d, %d) = %+f, %+f\n", i, j, A(i, j).r, A(i, j).i);
+      if (PRINT_DETAILED_MATRICIES) {
+        printf("A(%d, %d) = %+f, %+f\n", i, j, A(i, j).r, A(i, j).i);
+      }
     }
     
     B(i).r = rootsOfUnity[i][1].real();
