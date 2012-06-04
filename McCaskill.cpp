@@ -30,7 +30,7 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 2
+#define SCALING_FACTOR 2.5
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -144,6 +144,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       printf("c:        %f\n", (double)SCALING_FACTOR);
       printf("n:        %d\n", seqlen);
       printf("c^(n-1):  %f\n", SCALE(seqlen - 1));
+      printf("x:        %+f, %+f\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
       printf("Q[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real());
       printf("Z[1][%d]: %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
       printf("Z[%d][1]: %.15f\n", seqlen, Z[seqlen][1].real());
@@ -297,6 +298,8 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
       
       A(i, j).r = poweredRoot.real();
       A(i, j).i = poweredRoot.imag();
+      
+      printf("A(%d, %d) = %+f, %+f\n", i, j, A(i, j).r, A(i, j).i);
     }
     
     B(i).r = rootsOfUnity[i][1].real();
