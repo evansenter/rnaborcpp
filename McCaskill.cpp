@@ -48,12 +48,17 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   }
   
   // This will need to be parameterized.
-  std::cout << "Structure: ";
   for (i = 0; i < seqlen; ++i) {
     structure[i] = '.';
-    std::cout << structure[i];
   }
-  std::cout << std::endl;
+  
+  if (DEBUG) {
+    std::cout << "Structure: ";
+    for (i = 0; i < seqlen; ++i) {
+      std::cout << structure[i];
+    }
+    std::cout << std::endl;
+  }
   
   basePairs = getBasePairList(structure);
   bpCounts  = fillBasePairCounts(basePairs, seqlen);
@@ -132,10 +137,13 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
       printf("x:         %+f, %+f\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
       printf("Q[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real());
       printf("Z[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
-      printf("Z[%d][1]:  %.15f\n", seqlen, Z[seqlen][1].real());
+      printf("Z[%d][1]:  %.15f\n\n", seqlen, Z[seqlen][1].real());
+      printf("Working");
     }
     
-    std::cout << '.' << std::flush;
+    if (DEBUG) {
+      std::cout << '.' << std::flush;
+    }
   }
   
   // Optimization leveraging complementarity of roots of unity.
@@ -149,7 +157,9 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     rootsOfUnity[root][1] = dcomplex(rootsOfUnity[i][1].real(), -rootsOfUnity[i][1].imag());
   }
   
-  printf("\n\n");
+  if (DEBUG) {
+    printf("\n\n");
+  }
   
   solveLinearSystem(rootsOfUnity, Z);
   
@@ -294,32 +304,34 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
   }
   
   LaLinearSolveIP(A, X, B);
-
-  for (i = 0; i <= seqlen; ++i) {
-    sum = sum + X(i).r;
+  
+  if (DEBUG) {
+    for (i = 0; i <= seqlen; ++i) {
+      sum = sum + X(i).r;
+    }
+    
+    std::cout << "Solution:" << std::endl;
+    std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
+  
+    for (i = 0; i <= seqlen; ++i) {
+      std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
+    }
+  
+    std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
+  
+    for (i = 0; i <= seqlen; ++i) {
+      std::cout << i << ": " << X(i).r / sum << std::endl;
+    }
+  
+    std::cout << std::endl;
+  
+    unscaled = sum * SCALE(seqlen - 1);
+    counted  = Z[seqlen][1].real();
+  
+    printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
+    printf("The total number of structures by counting is:             %.0f.\n", counted);
+    printf("|100 * (unscaled - counted) / counted|:                    %.15f.\n", fabs(100 * (unscaled - counted) / counted));
   }
-  
-  std::cout << "Solution:" << std::endl;
-  std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
-  
-  for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
-  }
-  
-  std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
-  
-  for (i = 0; i <= seqlen; ++i) {
-    std::cout << i << ": " << X(i).r / sum << std::endl;
-  }
-  
-  std::cout << std::endl;
-  
-  unscaled = sum * SCALE(seqlen - 1);
-  counted  = Z[seqlen][1].real();
-  
-  printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
-  printf("The total number of structures by counting is:             %.0f.\n", counted);
-  printf("|100 * (unscaled - counted) / counted|:                    %.15f.\n", fabs(100 * (unscaled - counted) / counted));
 }
 
 int jPairedTo(int i, int j, int *basePairs) {
