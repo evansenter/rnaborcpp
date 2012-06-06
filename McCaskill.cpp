@@ -15,7 +15,7 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 3
+#define SCALING_FACTOR 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -36,7 +36,7 @@ double** runMcCaskill(char sequence[MAXSIZE]) {
   double **Z            = new double*[seqlen + 1];
   double **ZB           = new double*[seqlen + 1];
   double **ZM           = new double*[seqlen + 1];
-  double **rootsOfUnity   = new double*[seqlen + 1];
+  double **rootsOfUnity = new double*[seqlen + 1];
   
   // Matrix allocation.
   for (i = 0; i <= seqlen; ++i) {
@@ -388,7 +388,7 @@ void printMatrix(double **matrix, char *title, int iStart, int iStop, int jStart
       
   for (i = iStart; i <= iStop; ++i) {
     for (j = jStart; j <= jStop; ++j) {
-      std::cout << matrix[i][j] << std::endl;
+      printf("%-25f  ", matrix[i][j]);
     }
     std::cout << std::endl;
   }
