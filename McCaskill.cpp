@@ -31,8 +31,6 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
   int root, i, j, k, d, *basePairs, **bpCounts;
   char structure[seqlen];
   
-  std::cout.precision(15);
-  
   dcomplex **Z            = new dcomplex*[seqlen + 1];
   dcomplex **ZB           = new dcomplex*[seqlen + 1];
   dcomplex **ZM           = new dcomplex*[seqlen + 1];

@@ -27,11 +27,24 @@ ap points
 
 matrix  = "[%s]" % points.map(&:first).map { |root| (0...points.length).map { |power| root ** power }.join(" ") }.join("; ")
 vector  = "[%s]" % points.map(&:last).join("; ")
-command = "A = %s; b = %s; x = A \\ b" % [matrix, vector]
+command = case ARGV.last
+when /.*fft.*/ then
+  "b = %s; z = fft(b); z1 = z / real(z(1))" % vector
+else
+  "A = %s; b = %s; x = A \\ b" % [matrix, vector]
+end
 
 if generate_command_only
   puts "The Matlab command is:"
-  puts command
+  
+  case ARGV.last
+  when /.*fft.*/ then
+    puts "b = %s;" % vector
+  else
+    puts "A = %s;\n\n\n" % matrix
+    puts "b = %s;\n\n\n" % vector
+    puts command
+  end
 else
   puts "Going to run the following command in Matlab:"
   puts command
