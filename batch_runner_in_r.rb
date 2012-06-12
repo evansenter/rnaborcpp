@@ -20,7 +20,9 @@ Run.where(algorithm: :complex_me).each do |template_run|
   end
   
   template_run.solutions.each do |template_solution|
-    run.solutions << ComplexSolution.new(k: template_solution.k, value: (10 ** 2) * template_solution.value / run.count)
+    uncast = (10 ** 2) * template_solution.value / run.count
+    
+    run.solutions << ComplexSolution.new(k: template_solution.k, value: Complex(uncast.real.round, uncast.imag.round))
   end
   
   vector   = "c(%s)" % run.solutions.map(&:pretty).join(", ")
