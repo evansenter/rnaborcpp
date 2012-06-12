@@ -1,4 +1,5 @@
 require "awesome_print"
+require "vienna_rna"
 
 sequence              = ARGV.first || (raise ArgumentError.new("No RNA sequence provided"))
 generate_command_only = ARGV.last =~ /command/i
@@ -10,17 +11,7 @@ puts "Running RNAbor with #{sequence}..."
 puts (output = %x|./RNAbor -s #{sequence}|)
 puts "Parsing output..."
 
-points = output.split(/\n/).reject { |line| 
-  line.empty?
-}.drop_while { |line|
-  line !~ /^roots and solutions/i
-}.reverse.drop_while { |line|
-  line !~ /solution/i
-}.reverse[1..-2].map { |line|
-  line.strip.split(/\s\s+/).map do |complex|
-    eval("Complex(#{complex})")
-  end
-}
+points = ViennaRna::Rnabor.parse(output) { |line| eval("Complex(#{line})") }
 
 puts "Parsed roots and solutions:"
 ap points

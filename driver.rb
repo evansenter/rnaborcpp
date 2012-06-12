@@ -17,8 +17,9 @@ class BuildRun < ActiveRecord::Migration
   def self.up
     create_table :runs do |table|
       table.string  :sequence
-      table.decimal :scaling_factor
+      table.decimal :scaling_factor, precision: 2, scale: 1
       table.string  :algorithm
+      table.timestamps
     end 
   end
 end
@@ -32,8 +33,10 @@ class BuildNumeros < ActiveRecord::Migration
     create_table :numeros do |table|
       table.belongs_to :run
       table.string     :type
+      table.integer    :k
       table.decimal    :real,      precision: 63, scale: 15
       table.decimal    :imaginary, precision: 63, scale: 15
+      table.timestamps
     end  
   end
 end
@@ -43,14 +46,31 @@ unless ActiveRecord::Base.connection.execute("show tables").map(&:this).flatten.
 end
 
 class Run < ActiveRecord::Base
-  has_many :arguments, class_name: "Numero"
-  has_many :solutions, class_name: "Numero"
+  has_many :arguments, class_name: "Numero", dependent: :destroy, conditions: "type like '%Argument'"
+  has_many :solutions, class_name: "Numero", dependent: :destroy, conditions: "type like '%Solution'"
+  has_many :counts,    class_name: "Numero", dependent: :destroy, conditions: "type like '%Count'"
   
   validates_presence_of :sequence, :scaling_factor, :algorithm
+  
+  def total_estimated_error
+    counts.inject(0.0) do |sum, count|
+      sum + (count.value < 0 ? -count.value : (count.value.round - count.value).abs)
+    end
+  end
+  
+  def avg_estimated_error
+    total_estimated_error / (sequence.length + 1)
+  end
 end
 
 class Numero < ActiveRecord::Base
   belongs_to :run
+  
+  validates_presence_of :run_id
+  
+  def pretty
+    value.to_s
+  end
 end
 
 class RealNumero < Numero
@@ -58,6 +78,10 @@ class RealNumero < Numero
   
   def value
     real
+  end
+  
+  def value=(real)
+    self.real = real
   end
 end
 
@@ -67,4 +91,15 @@ class ComplexNumero < Numero
   def value
     Complex(real, imaginary)
   end
+  
+  def value=(complex)
+    self.real      = complex.real
+    self.imaginary = complex.imaginary
+  end
 end
+
+class RealArgument < RealNumero; end
+class RealSolution < RealNumero; end
+class RealCount < RealNumero; end
+class ComplexArgument < ComplexNumero; end
+class ComplexSolution < ComplexNumero; end

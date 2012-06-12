@@ -15,7 +15,6 @@
 #include "McCaskill.h"
 #include <lapackpp.h>
 #define STRUCTURE_COUNT 1
-#define SCALING_FACTOR 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -129,7 +128,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     }
     
     if (DEBUG && root == 0) {
-      printf("c:         %f\n", (double)SCALING_FACTOR);
+      printf("c:         %f\n", SCALING_FACTOR);
       printf("n:         %d\n", seqlen);
       printf("c^(n-1):   %f\n", SCALE(seqlen - 1));
       printf("x:         %+f, %+f\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
@@ -277,7 +276,8 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
   double sum, unscaled, counted;
   
   if (DEBUG) {
-    printMatrix(rootsOfUnity, (char *)"Roots and solutions:", 0, seqlen, 0, 1);
+    printMatrix(rootsOfUnity, (char *)"START ROOTS AND SOLUTIONS", 0, seqlen, 0, 1);
+    std::cout << "END ROOTS AND SOLUTIONS" << std::endl << std::endl;
   }
   
   // Might need to free this memory.
@@ -310,10 +310,13 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
     
     std::cout << "Solution:" << std::endl;
     std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
+    std::cout << "START UNSCALED SUM" << std::endl;
   
     for (i = 0; i <= seqlen; ++i) {
       std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
     }
+    
+    std::cout << "END UNSCALED SUM" << std::endl;
   
     std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
   
@@ -423,5 +426,4 @@ void printMatrix(dcomplex **matrix, char *title, int iStart, int iStop, int jSta
     }
     std::cout << std::endl;
   }
-  std::cout << std::endl;
 }
