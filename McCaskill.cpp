@@ -129,8 +129,8 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     
     if (DEBUG && root == 0) {
       printf("c:         %f\n", SCALING_FACTOR);
-      printf("n:         %d\n", seqlen);
       printf("c^(n-1):   %f\n", SCALE(seqlen - 1));
+      printf("n:         %d\n", seqlen);
       printf("x:         %+f, %+f\n", rootsOfUnity[root][0].real(), rootsOfUnity[root][0].imag());
       printf("Q[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real());
       printf("Z[1][%d]:  %.15f\n", seqlen, Z[1][seqlen].real() * SCALE(seqlen - 1));
