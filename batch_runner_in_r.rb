@@ -1,3 +1,6 @@
+# - y_k/Q*10^m (no integer conversion)
+# - y_k/Q*10^m, (take the complex number where both real and imaginary parts are truncated into an integer)
+
 require "./driver.rb"
 require "vienna_rna"
 require "awesome_print"

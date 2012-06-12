@@ -1,3 +1,5 @@
+# In the future this should use double columns in MySQL for better range.
+
 class Object; def this; self; end; end
 
 require "rubygems"
@@ -19,6 +21,7 @@ class BuildRun < ActiveRecord::Migration
       table.string  :sequence
       table.decimal :scaling_factor, precision: 2, scale: 1
       table.string  :algorithm
+      table.float   :count
       table.timestamps
     end 
   end

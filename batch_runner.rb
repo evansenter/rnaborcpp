@@ -12,6 +12,8 @@ template = "GGGGGCCCCC" * 10
     
     results = ViennaRna::Rnabor.new(sequence).run(scaling_factor: scaling_factor)
     
+    run.update_attributes(count: results.parse_total_count)
+    
     results.parse_points.each_with_index do |point_array, i|
       run.arguments << ComplexArgument.new(k: i, value: point_array.first)
       run.solutions << ComplexSolution.new(k: i, value: point_array.last)
