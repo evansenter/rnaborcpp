@@ -1,19 +1,26 @@
 # - y_k/Q*10^m (no integer conversion)
-# - y_k/Q*10^m, (take the complex number where both real and imaginary parts are truncated into an integer)
+# - y_k/Q*10^m (take the complex number where both real and imaginary parts are truncated into an integer)
 
 require "./driver.rb"
 require "vienna_rna"
 require "awesome_print"
 
+NaN = 0 # This is a dirty dirty hack to make eval work below when casting to Complex from R output
+
 Run.where(algorithm: :complex_me).each do |template_run|
-  ap (run = Run.create(sequence: template_run.sequence, scaling_factor: template_run.scaling_factor, algorithm: ARGV.last))
+  ap (run = Run.create({
+    sequence:       template_run.sequence, 
+    scaling_factor: template_run.scaling_factor, 
+    count:          template_run.count,
+    algorithm:      ARGV.last
+  }))
   
   template_run.arguments.each do |template_argument|
     run.arguments << ComplexArgument.new(k: template_argument.k, value: template_argument.value)
   end
   
   template_run.solutions.each do |template_solution|
-    run.solutions << ComplexSolution.new(k: template_solution.k, value: template_solution.value)
+    run.solutions << ComplexSolution.new(k: template_solution.k, value: (10 ** 2) * template_solution.value / run.count)
   end
   
   vector   = "c(%s)" % run.solutions.map(&:pretty).join(", ")
