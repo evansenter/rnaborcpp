@@ -54,7 +54,9 @@ class Run < ActiveRecord::Base
   
   def total_estimated_error
     counts.inject(0.0) do |sum, count|
-      sum + (count.value < 0 ? -count.value : (count.value.round - count.value).abs)
+      value = (count.value.class == Complex ? count.value.real : count.value)
+      
+      sum + (value < 0 ? -value : (value.round - value).abs)
     end
   end
   
@@ -103,3 +105,4 @@ class RealSolution < RealNumero; end
 class RealCount < RealNumero; end
 class ComplexArgument < ComplexNumero; end
 class ComplexSolution < ComplexNumero; end
+class ComplexCount < ComplexNumero; end
