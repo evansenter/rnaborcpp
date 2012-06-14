@@ -19,6 +19,7 @@ class BuildRun < ActiveRecord::Migration
   def self.up
     create_table :runs do |table|
       table.string  :sequence
+      table.integer :sequence_length
       table.decimal :scaling_factor, precision: 2, scale: 1
       table.string  :algorithm
       table.float   :count
@@ -53,7 +54,7 @@ class Run < ActiveRecord::Base
   has_many :solutions, class_name: "Numero", dependent: :destroy, conditions: "type like '%Solution'"
   has_many :counts,    class_name: "Numero", dependent: :destroy, conditions: "type like '%Count'"
   
-  validates_presence_of :sequence, :scaling_factor, :algorithm
+  validates_presence_of :sequence, :sequence_length, :scaling_factor, :algorithm
   
   def total_estimated_error
     counts.inject(0.0) do |sum, count|

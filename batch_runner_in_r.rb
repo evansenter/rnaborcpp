@@ -9,10 +9,11 @@ NaN = 0 # This is a dirty dirty hack to make eval work below when casting to Com
 
 Run.where(algorithm: :complex_me).each do |template_run|
   ap (run = Run.create({
-    sequence:       template_run.sequence, 
-    scaling_factor: template_run.scaling_factor, 
-    count:          template_run.count,
-    algorithm:      ARGV.last
+    sequence:        template_run.sequence, 
+    sequence_length: template_run.sequence_length, 
+    scaling_factor:  template_run.scaling_factor, 
+    count:           template_run.count,
+    algorithm:       ARGV.last
   }))
   
   template_run.arguments.each do |template_argument|
@@ -22,11 +23,11 @@ Run.where(algorithm: :complex_me).each do |template_run|
   template_run.solutions.each do |template_solution|
     uncast = (10 ** 2) * template_solution.value / run.count
     
-    run.solutions << ComplexSolution.new(k: template_solution.k, value: Complex(uncast.real.round, uncast.imag.round))
+    run.solutions << ComplexSolution.new(k: template_solution.k, value: uncast)
   end
   
   vector   = "c(%s)" % run.solutions.map(&:pretty).join(", ")
-  command  = "Rscript -e 'a <- #{vector}; b <- fft(a) / Re(fft(a)[1]); lapply(b, function(i) { sprintf(\"%g, %g\", Re(i), Im(i)) })'"
+  command  = "Rscript -e 'a <- #{vector}; b <- fft(a); lapply(b, function(i) { sprintf(\"%g, %g\", Re(i), Im(i)) })'"
   response = %x|#{command}|
   
   response.split(/\n/).reject(&:empty?).select do |line| 

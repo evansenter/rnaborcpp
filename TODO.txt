@@ -1,0 +1,2 @@
+- Get a couple sequences with precision of 4, compare Webserver to our output
+- Email Peter (cc Ivan) with the specific methods that we're doing (10^m * solutions / Z) => FFT => results.truncate / 10^m

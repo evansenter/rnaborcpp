@@ -8,7 +8,7 @@ template = "GGGGGCCCCC" * 10
   (1.0.step(2.0, 0.5).to_a + 2.25.step(3.0, 0.25).to_a).map do |scaling_factor|
     sequence = template[0, sequence_length]
     
-    ap (run = Run.create(sequence: sequence, scaling_factor: scaling_factor, algorithm: ARGV.last))
+    ap (run = Run.create(sequence: sequence, sequence_length: sequence.length, scaling_factor: scaling_factor, algorithm: ARGV.last))
     
     results = ViennaRna::Rnabor.new(sequence).run(scaling_factor: scaling_factor)
     
