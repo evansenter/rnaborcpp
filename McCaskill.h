@@ -4,7 +4,7 @@
 
 typedef std::complex<double> dcomplex;
 
-std::complex<double>** runMcCaskill(char sequence[MAXSIZE]);
+std::complex<double>** runMcCaskill(char sequence[MAXSIZE], char structure[MAXSIZE]);
 void solveZ(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **Z, std::complex<double> **ZB);
 void solveZB(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM);
 void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, int **basePairCounts, std::complex<double> **ZB, std::complex<double> **ZM);

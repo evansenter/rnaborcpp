@@ -55,21 +55,44 @@ double MaxInArray(double array[],int arraylen)   //safe
   return largest;
 }
 
-/*The following function check if the input string is a valid RNA sequence*/
-int CheckSequence(char sequence[MAXSIZE]){     //safe
+/* The following function check if the input strings are valid RNA sequence, structure */
+int CheckSequenceAndStructure(char sequence[MAXSIZE], char structure[MAXSIZE]) {
   int i;
-  for (i=1;i<strlen(sequence);++i)
-    {
-     if (toupper(sequence[i])!='A' && toupper(sequence[i])!='U' && toupper(sequence[i])!='C' && toupper(sequence[i])!='G'&& toupper(sequence[i])!='T') //check if there are invalid characters
-        {
-         printf("The input string should only contain A,U,T,C,G!\n");
-         exit(1);
-        }
-     else if (toupper(sequence[i])=='T') //change T to U
-        sequence[i]='U';
-     else
-        sequence[i]=toupper(sequence[i]); // change lower case to upper case
+  
+  // Sequence is 1 indexed, structure is 0 indexed
+  if (strlen(sequence) != strlen(structure) + 1) {
+    printf("The RNA sequence and structure must be of identical length.\n");
+    exit(1);
+  }
+  
+  for (i = 1; i < strlen(sequence); ++i) {
+    // Sequence validation
+    if (
+      toupper(sequence[i]) != 'A' && 
+      toupper(sequence[i]) != 'U' && 
+      toupper(sequence[i]) != 'C' && 
+      toupper(sequence[i]) != 'G' && 
+      toupper(sequence[i]) != 'T'
+    ) {
+      printf("The input sequence should only contain A, U, T, C, G!\n");
+      exit(1);
+    } else if (toupper(sequence[i]) == 'T') {
+      sequence[i] = 'U';
+    } else {
+      sequence[i] = toupper(sequence[i]);
     }
+    
+    // Structure validation
+    if (
+      structure[i - 1] != '(' && 
+      structure[i - 1] != ')' && 
+      structure[i - 1] != '.'
+    ) {
+      printf("The input structure should only contain '.', '(' and ')'!\n");
+      exit(1);
+    }
+  }
+  
   return 0;
 }
 

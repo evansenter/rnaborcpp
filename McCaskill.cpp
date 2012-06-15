@@ -25,10 +25,9 @@
 #define PRINT_MATRICES 0
 #define PRINT_DETAILED_MATRICIES 0
 
-dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
+dcomplex** runMcCaskill(char sequence[MAXSIZE], char structure[MAXSIZE]) {
   // Variable declarations.
   int root, i, j, k, d, *basePairs, **bpCounts;
-  char structure[seqlen];
   
   dcomplex **Z            = new dcomplex*[seqlen + 1];
   dcomplex **ZB           = new dcomplex*[seqlen + 1];
@@ -42,11 +41,6 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE]) {
     ZM[i]              = new dcomplex[seqlen + 1];
     rootsOfUnity[i]    = new dcomplex[2];
     rootsOfUnity[i][0] = dcomplex(cos(2 * M_PI * i / (seqlen + 1)), sin(2 * M_PI * i / (seqlen + 1)));
-  }
-  
-  // This will need to be parameterized.
-  for (i = 0; i < seqlen; ++i) {
-    structure[i] = '.';
   }
   
   if (DEBUG) {
