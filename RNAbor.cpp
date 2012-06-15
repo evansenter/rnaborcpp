@@ -56,11 +56,11 @@ int main(int argc, char *argv[]){
     seqlen = strlen(sequence) - 1;
     
     Initialize_Params();
-    make_pair_matrix(); // Needed for pair matching
+    make_pair_matrix(); // Needed for pair matching.
     
     kT       = (temperature + K0) * GASCONST / 1000.0;
-    ML_base  = 0; // (double)P -> MLbase / 100;
-    ML_close = 0; // (double)P -> MLclosing / 100;
+    ML_base  = (double)P -> MLbase / 100;
+    ML_close = (double)P -> MLclosing / 100;
     std::complex<double>** McCaskillZ;
     
     McCaskillZ = runMcCaskill(sequence);
