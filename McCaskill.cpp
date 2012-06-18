@@ -13,7 +13,8 @@
 #include "RNAbor.h"
 #include "misc.h"
 #include "McCaskill.h"
-#include <lapackpp.h>
+// #include <lapackpp.h>
+#include <iostream>
 #define STRUCTURE_COUNT 1
 #define MIN_PAIR_DIST 3
 #define MAX_INTERIOR_DIST 30
@@ -275,58 +276,58 @@ void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
   }
   
   // Might need to free this memory.
-  LaGenMatComplex A(seqlen + 1, seqlen + 1);
-  LaVectorComplex X(seqlen + 1);
-  LaVectorComplex B(seqlen + 1);
-  
-  for (i = 0; i <= seqlen; ++i) {
-    for (j = 0; j <= seqlen; ++j) {
-      poweredRoot = pow(rootsOfUnity[i][0], j);
-      
-      A(i, j).r = poweredRoot.real();
-      A(i, j).i = poweredRoot.imag();
-      
-      if (PRINT_DETAILED_MATRICIES) {
-        printf("A(%d, %d) = %+f, %+f\n", i, j, A(i, j).r, A(i, j).i);
-      }
-    }
-    
-    B(i).r = rootsOfUnity[i][1].real();
-    B(i).i = rootsOfUnity[i][1].imag();
-  }
-  
-  LaLinearSolveIP(A, X, B);
-  
-  if (DEBUG) {
-    for (i = 0; i <= seqlen; ++i) {
-      sum = sum + X(i).r;
-    }
-    
-    std::cout << "Solution:" << std::endl;
-    std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
-    std::cout << "START UNSCALED SUM" << std::endl;
-  
-    for (i = 0; i <= seqlen; ++i) {
-      std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
-    }
-    
-    std::cout << "END UNSCALED SUM" << std::endl;
-  
-    std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
-  
-    for (i = 0; i <= seqlen; ++i) {
-      std::cout << i << ": " << X(i).r / sum << std::endl;
-    }
-  
-    std::cout << std::endl;
-  
-    unscaled = sum * SCALE(seqlen - 1);
-    counted  = Z[seqlen][1].real();
-  
-    printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
-    printf("The total number of structures by counting is:             %.0f.\n", counted);
-    printf("|100 * (unscaled - counted) / counted|:                    %.15f.\n", fabs(100 * (unscaled - counted) / counted));
-  }
+  // LaGenMatComplex A(seqlen + 1, seqlen + 1);
+  // LaVectorComplex X(seqlen + 1);
+  // LaVectorComplex B(seqlen + 1);
+  // 
+  // for (i = 0; i <= seqlen; ++i) {
+  //   for (j = 0; j <= seqlen; ++j) {
+  //     poweredRoot = pow(rootsOfUnity[i][0], j);
+  //     
+  //     A(i, j).r = poweredRoot.real();
+  //     A(i, j).i = poweredRoot.imag();
+  //     
+  //     if (PRINT_DETAILED_MATRICIES) {
+  //       printf("A(%d, %d) = %+f, %+f\n", i, j, A(i, j).r, A(i, j).i);
+  //     }
+  //   }
+  //   
+  //   B(i).r = rootsOfUnity[i][1].real();
+  //   B(i).i = rootsOfUnity[i][1].imag();
+  // }
+  // 
+  // LaLinearSolveIP(A, X, B);
+  // 
+  // if (DEBUG) {
+  //   for (i = 0; i <= seqlen; ++i) {
+  //     sum = sum + X(i).r;
+  //   }
+  //   
+  //   std::cout << "Solution:" << std::endl;
+  //   std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
+  //   std::cout << "START UNSCALED SUM" << std::endl;
+  // 
+  //   for (i = 0; i <= seqlen; ++i) {
+  //     std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
+  //   }
+  //   
+  //   std::cout << "END UNSCALED SUM" << std::endl;
+  // 
+  //   std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
+  // 
+  //   for (i = 0; i <= seqlen; ++i) {
+  //     std::cout << i << ": " << X(i).r / sum << std::endl;
+  //   }
+  // 
+  //   std::cout << std::endl;
+  // 
+  //   unscaled = sum * SCALE(seqlen - 1);
+  //   counted  = Z[seqlen][1].real();
+  // 
+  //   printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
+  //   printf("The total number of structures by counting is:             %.0f.\n", counted);
+  //   printf("|100 * (unscaled - counted) / counted|:                    %.15f.\n", fabs(100 * (unscaled - counted) / counted));
+  // }
 }
 
 int jPairedTo(int i, int j, int *basePairs) {

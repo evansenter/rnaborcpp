@@ -1,7 +1,7 @@
 - Parameterize secondary structure input
-- Move integrated energy code over to master branch
+- Move integrated energy code (adopted from RNAhairpin codebase) over to master branch
 - Use a FFT C/C++ library
-- Validate against RNAbor
+- Validate against RNAbor webserver
 - Migrate to in-house energy parameters
-- Validate against RNAbor
+- Validate against RNAbor webserver
 - Performance analysis
