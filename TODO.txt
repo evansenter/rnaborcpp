@@ -5,3 +5,5 @@
 - Migrate to in-house energy parameters
 - Validate against RNAbor webserver
 - Performance analysis
+- Parallelize
+- Performance analysis

@@ -1,5 +1,5 @@
 RNAbor: convert_Vienna.o energy_par.o fold.o fold_vars.o misc.o pair_mat.o params.o RNAbor.o utils.o McCaskill.o
-	g++ -o RNAbor -lm convert_Vienna.o energy_par.o fold.o fold_vars.o McCaskill.o misc.o pair_mat.o params.o RNAbor.o utils.o
+	g++ -o RNAbor -lfftw3 -lm convert_Vienna.o energy_par.o fold.o fold_vars.o McCaskill.o misc.o pair_mat.o params.o RNAbor.o utils.o
 
 convert_Vienna.o: convert_Vienna.cpp convert_Vienna.h
 	g++ -c convert_Vienna.cpp

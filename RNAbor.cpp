@@ -17,9 +17,10 @@
 double kT;
 double ML_base;
 double ML_close;
-int seqlen;
-short *S0;
+int    seqlen;
+short  *S0;
 double SCALING_FACTOR;
+int    PRECISION;
 
 PRIVATE short *encode_seq(const char *seq);
 
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]){
   char sequence[MAXSIZE], structure[MAXSIZE];
   int i, j;
   
-  if (argc == 7) {
+  if (argc == 9) {
     i = 1;
     while (i < argc) {
   	  if (!strcmp(argv[i], "-s")) {
@@ -42,13 +43,17 @@ int main(int argc, char *argv[]){
       } else if (!strcmp(argv[i], "-c")) {
         SCALING_FACTOR = atof(argv[i + 1]);
         i += 2;
+      } else if (!strcmp(argv[i], "-p")) {
+        PRECISION = atoi(argv[i + 1]);
+        i += 2;
       } else {
         printf("Error: Unrecognizable Flag!\n");
         printf("Usage:");
-        printf("%s -s SEQUENCE -r STRUCTURE -c SCALING\n",argv[0]);
+        printf("%s -s SEQUENCE -r STRUCTURE -c SCALING -p PRECISION\n",argv[0]);
         printf("SEQUENCE is the RNA sequence.\n");
         printf("STRUCTURE is the RNA structure.\n");
         printf("SCALING is used internally as the scaling factor for the recursions.\n");
+        printf("PRECISION dictates the number of signigicant digits in the resulting distribution.\n");
         printf("The length of RNA sequence should be less than %d and larger than or equal to 5.\n", MAXSIZE);
         exit(1);
       }
@@ -66,14 +71,13 @@ int main(int argc, char *argv[]){
     std::complex<double>** McCaskillZ;
     
     McCaskillZ = runMcCaskill(sequence, structure);
-    // printf("The RNA sequence is %s:\n",sequence+1);
-    // printf("The total number of structures is %.0f.\n", McCaskillZ[seqlen][1].real());
   } else {
     printf("Usage:");
-    printf("%s -s SEQUENCE -r STRUCTURE -c SCALING\n",argv[0]);
+    printf("%s -s SEQUENCE -r STRUCTURE -c SCALING -p PRECISION\n",argv[0]);
     printf("SEQUENCE is the RNA sequence.\n");
     printf("STRUCTURE is the RNA structure.\n");
     printf("SCALING is used internally as the scaling factor for the recursions.\n");
+    printf("PRECISION dictates the number of signigicant digits in the resulting distribution.\n");
     printf("The length of RNA sequence should be less than %d and larger than or equal to 5.\n", MAXSIZE);
     exit(1);
   }

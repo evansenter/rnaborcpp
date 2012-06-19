@@ -13,7 +13,7 @@
 #include "RNAbor.h"
 #include "misc.h"
 #include "McCaskill.h"
-// #include <lapackpp.h>
+#include <fftw3.h>
 #include <iostream>
 #define STRUCTURE_COUNT 1
 #define MIN_PAIR_DIST 3
@@ -25,15 +25,19 @@
 #define DEBUG 1
 #define PRINT_MATRICES 0
 #define PRINT_DETAILED_MATRICIES 0
+#define FFTW_REAL 0
+#define FFTW_IMAG 1
 
 dcomplex** runMcCaskill(char sequence[MAXSIZE], char structure[MAXSIZE]) {
   // Variable declarations.
   int root, i, j, k, d, *basePairs, **bpCounts;
+  double scalingFactor;
   
   dcomplex **Z            = new dcomplex*[seqlen + 1];
   dcomplex **ZB           = new dcomplex*[seqlen + 1];
   dcomplex **ZM           = new dcomplex*[seqlen + 1];
   dcomplex **rootsOfUnity = new dcomplex*[seqlen + 1];
+  double *coefficients    = new double[seqlen + 1];
   
   // Matrix allocation.
   for (i = 0; i <= seqlen; ++i) {
@@ -118,6 +122,10 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE], char structure[MAXSIZE]) {
     
     rootsOfUnity[root][1] = Z[1][seqlen];
     
+    if (!root) {
+      scalingFactor = Z[1][seqlen].real() * SCALE(seqlen - 1);
+    }
+    
     if (PRINT_MATRICES) {
       printMatrix(Z, (char *)"Evaluated matrix (1-indexed, zeroth root):", 0, seqlen, 0, seqlen);
     }
@@ -153,7 +161,7 @@ dcomplex** runMcCaskill(char sequence[MAXSIZE], char structure[MAXSIZE]) {
     printf("\n\n");
   }
   
-  solveLinearSystem(rootsOfUnity, Z);
+  solveSystem(rootsOfUnity, coefficients, scalingFactor);
   
   return Z;
 }
@@ -265,69 +273,38 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
   }
 }
 
-void solveLinearSystem(dcomplex **rootsOfUnity, dcomplex **Z) {
-  int i, j;
-  dcomplex poweredRoot;
-  double sum, unscaled, counted;
+void solveSystem(dcomplex **rootsOfUnity, double *coefficients, double scalingFactor) {
+  int i;
+  dcomplex scaledSolution;
+  dcomplex sum = ZERO_C;
   
   if (DEBUG) {
     printMatrix(rootsOfUnity, (char *)"START ROOTS AND SOLUTIONS", 0, seqlen, 0, 1);
     std::cout << "END ROOTS AND SOLUTIONS" << std::endl << std::endl;
+    std::cout << "Scaling factor (Z{1, n}): " << scalingFactor << std::endl;
+  }
+
+  fftw_complex signal[seqlen + 1];
+  fftw_complex result[seqlen + 1];
+  
+  for (i = 0; i <= seqlen; i++) {
+    scaledSolution = (pow(10, PRECISION) * rootsOfUnity[i][1]) / scalingFactor;
+    
+    signal[i][FFTW_REAL] = scaledSolution.real();
+    signal[i][FFTW_IMAG] = scaledSolution.imag();
   }
   
-  // Might need to free this memory.
-  // LaGenMatComplex A(seqlen + 1, seqlen + 1);
-  // LaVectorComplex X(seqlen + 1);
-  // LaVectorComplex B(seqlen + 1);
-  // 
-  // for (i = 0; i <= seqlen; ++i) {
-  //   for (j = 0; j <= seqlen; ++j) {
-  //     poweredRoot = pow(rootsOfUnity[i][0], j);
-  //     
-  //     A(i, j).r = poweredRoot.real();
-  //     A(i, j).i = poweredRoot.imag();
-  //     
-  //     if (PRINT_DETAILED_MATRICIES) {
-  //       printf("A(%d, %d) = %+f, %+f\n", i, j, A(i, j).r, A(i, j).i);
-  //     }
-  //   }
-  //   
-  //   B(i).r = rootsOfUnity[i][1].real();
-  //   B(i).i = rootsOfUnity[i][1].imag();
-  // }
-  // 
-  // LaLinearSolveIP(A, X, B);
-  // 
-  // if (DEBUG) {
-  //   for (i = 0; i <= seqlen; ++i) {
-  //     sum = sum + X(i).r;
-  //   }
-  //   
-  //   std::cout << "Solution:" << std::endl;
-  //   std::cout << "Sum (unscaled, sum = " << sum * SCALE(seqlen - 1) << "): " << std::endl;
-  //   std::cout << "START UNSCALED SUM" << std::endl;
-  // 
-  //   for (i = 0; i <= seqlen; ++i) {
-  //     std::cout << i << ": " << X(i).r * SCALE(seqlen - 1) << std::endl;
-  //   }
-  //   
-  //   std::cout << "END UNSCALED SUM" << std::endl;
-  // 
-  //   std::cout << "\nSum (normalized, sum = " << sum << "): " << std::endl;
-  // 
-  //   for (i = 0; i <= seqlen; ++i) {
-  //     std::cout << i << ": " << X(i).r / sum << std::endl;
-  //   }
-  // 
-  //   std::cout << std::endl;
-  // 
-  //   unscaled = sum * SCALE(seqlen - 1);
-  //   counted  = Z[seqlen][1].real();
-  // 
-  //   printf("The total number of structures by unscaling recursions is: %f.\n", unscaled);
-  //   printf("The total number of structures by counting is:             %.0f.\n", counted);
-  //   printf("|100 * (unscaled - counted) / counted|:                    %.15f.\n", fabs(100 * (unscaled - counted) / counted));
-  // }
+  fftw_plan plan = fftw_plan_dft_1d(seqlen + 1, signal, result, FFTW_FORWARD, FFTW_ESTIMATE);
+  fftw_execute(plan);
+  fftw_destroy_plan(plan);
+  
+  for (i = 0; i <= seqlen; i++) {
+    coefficients[i] = PRECISION == 0 ? result[i][FFTW_REAL] / (seqlen + 1) : pow(10.0, -PRECISION) * static_cast<int>(result[i][FFTW_REAL] / (seqlen + 1));
+    sum            += coefficients[i];
+    std::cout << i << ": " << coefficients[i] << std::endl;
+  }
+  
+  std::cout << "Sum: " << sum << std::endl;
 }
 
 int jPairedTo(int i, int j, int *basePairs) {

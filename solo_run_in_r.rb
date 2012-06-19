@@ -24,7 +24,6 @@ response = %x|#{command}|
 puts command
 puts response
 
-# results = response.split(/\n/).map { |line| line.strip.match(/\[\d+\]\s+(.*)$/)[1].split(/\s+/) }.flatten.map { |i| i.match(/(-?\d+\.\d+e[\+-]\d+)/)[1].to_f.truncate / 10.0 ** precision }
 results = response.split(/\n/).map { |line| line.strip.match(/\[\d+\]\s+(.*)$/)[1].split(/\s+/) }.flatten.map { |i| i.match(/(-?\d+\.\d+e[\+-]\d+)/)[1].to_f * results.parse_total_count }
 
 ap results
@@ -44,7 +43,6 @@ response = %x|#{command}|
 puts command
 puts response
 
-# results = response.split(/\n/).map { |line| line.strip.match(/\[\d+\]\s+(.*)$/)[1].split(/\s+/) }.flatten.map { |i| i.match(/(-?\d+\.\d+e[\+-]\d+)/)[1].to_f.truncate / 10.0 ** precision }
 results = response.split(/\n/).map { |line| line.strip.match(/\[\d+\]\s+(.*)$/)[1].split(/\s+/) }.flatten.map { |i| i.match(/(-?\d+\.\d+e[\+-]\d+)/)[1].to_f * results.parse_total_count }
 
 ap results
