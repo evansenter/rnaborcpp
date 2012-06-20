@@ -6,8 +6,7 @@ require "rubygems"
 require "mysql2"
 require "active_record"
 
-config = YAML::load(File.open("database.yml"))
-ActiveRecord::Base.establish_connection(config)
+ActiveRecord::Base.establish_connection({ adapter: "mysql2", username: "root", reconnect: true })
 
 unless ActiveRecord::Base.connection.execute("show databases").map(&:this).flatten.include?("rnabor")
   ActiveRecord::Base.connection.create_database("rnabor")

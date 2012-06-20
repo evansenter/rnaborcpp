@@ -275,7 +275,6 @@ void solveZM(int i, int j, dcomplex x, char sequence[MAXSIZE], int *basePairs, i
 
 void solveSystem(dcomplex **rootsOfUnity, double *coefficients, double scalingFactor) {
   int i;
-  dcomplex scaledSolution;
   dcomplex sum = ZERO_C;
   
   if (DEBUG) {
@@ -288,21 +287,22 @@ void solveSystem(dcomplex **rootsOfUnity, double *coefficients, double scalingFa
   fftw_complex result[seqlen + 1];
   
   for (i = 0; i <= seqlen; i++) {
-    scaledSolution = (pow(10, PRECISION) * rootsOfUnity[i][1]) / scalingFactor;
-    
-    signal[i][FFTW_REAL] = scaledSolution.real();
-    signal[i][FFTW_IMAG] = scaledSolution.imag();
+    signal[i][FFTW_REAL] = (pow(10, PRECISION) * rootsOfUnity[i][1].real()) / scalingFactor;
+    signal[i][FFTW_IMAG] = (pow(10, PRECISION) * rootsOfUnity[i][1].imag()) / scalingFactor;
   }
   
   fftw_plan plan = fftw_plan_dft_1d(seqlen + 1, signal, result, FFTW_FORWARD, FFTW_ESTIMATE);
   fftw_execute(plan);
   fftw_destroy_plan(plan);
   
+  std::cout << "START DISTRIBUTION" << std::endl;
   for (i = 0; i <= seqlen; i++) {
     coefficients[i] = PRECISION == 0 ? result[i][FFTW_REAL] / (seqlen + 1) : pow(10.0, -PRECISION) * static_cast<int>(result[i][FFTW_REAL] / (seqlen + 1));
     sum            += coefficients[i];
+    
     std::cout << i << ": " << coefficients[i] << std::endl;
   }
+  std::cout << "END DISTRIBUTION" << std::endl << std::endl;
   
   std::cout << "Sum: " << sum << std::endl;
 }

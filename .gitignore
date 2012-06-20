@@ -3,4 +3,5 @@ output*
 *.o
 *.ps
 RNAbor
+FFTbor
 .DS_Store

@@ -1,5 +1,5 @@
-RNAbor: convert_Vienna.o energy_par.o fold.o fold_vars.o misc.o pair_mat.o params.o RNAbor.o utils.o McCaskill.o
-	g++ -o RNAbor -lfftw3 -lm convert_Vienna.o energy_par.o fold.o fold_vars.o McCaskill.o misc.o pair_mat.o params.o RNAbor.o utils.o
+FFTbor: convert_Vienna.o energy_par.o fold.o fold_vars.o misc.o pair_mat.o params.o RNAbor.o utils.o McCaskill.o
+	g++ -o FFTbor -lfftw3 -lm convert_Vienna.o energy_par.o fold.o fold_vars.o McCaskill.o misc.o pair_mat.o params.o RNAbor.o utils.o
 
 convert_Vienna.o: convert_Vienna.cpp convert_Vienna.h
 	g++ -c convert_Vienna.cpp
@@ -32,9 +32,9 @@ utils.o: utils.cpp utils.h
 	g++ -c utils.cpp
 
 install: RNAbor
-	cp RNAbor /usr/local/bin
-	cp RNAbor.man /usr/local/man/man1/RNAbor.1
+	cp FFTbor /usr/local/bin
+	cp FFTbor.man /usr/local/man/man1/FFTbor.1
 	
 clean:
 	rm -fr *.o
-	rm -f ./RNAbor
+	rm -f ./FFTbor

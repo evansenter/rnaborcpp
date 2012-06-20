@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
       } else {
         printf("Error: Unrecognizable Flag!\n");
         printf("Usage:");
-        printf("%s -s SEQUENCE -r STRUCTURE -c SCALING -p PRECISION\n",argv[0]);
+        printf("%s -s SEQUENCE -r STRUCTURE -c SCALING -p PRECISION\n", argv[0]);
         printf("SEQUENCE is the RNA sequence.\n");
         printf("STRUCTURE is the RNA structure.\n");
         printf("SCALING is used internally as the scaling factor for the recursions.\n");
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
     McCaskillZ = runMcCaskill(sequence, structure);
   } else {
     printf("Usage:");
-    printf("%s -s SEQUENCE -r STRUCTURE -c SCALING -p PRECISION\n",argv[0]);
+    printf("%s -s SEQUENCE -r STRUCTURE -c SCALING -p PRECISION\n", argv[0]);
     printf("SEQUENCE is the RNA sequence.\n");
     printf("STRUCTURE is the RNA structure.\n");
     printf("SCALING is used internally as the scaling factor for the recursions.\n");
