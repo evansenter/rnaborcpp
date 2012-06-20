@@ -40,7 +40,7 @@ end
 
 ViennaRna.debug = false
 
-20.step(260, 20).inject({}) { |hash, size| hash.merge(size => (case size; when 1..150 then 100; when 151..200 then 5; else 3; end)) }.each do |size, iterations|
+20.step(260, 20).inject({}) { |hash, size| hash.merge(size => (case size; when 1..150 then 20; when 151..200 then 5; else 3; end)) }.each do |size, iterations|
   iterations.times do
     sequence = Run.generate_sequence(size)
 
